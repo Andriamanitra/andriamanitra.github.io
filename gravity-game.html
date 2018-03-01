@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gravity game</title>
+  <style>
+    html, body {
+      padding: 0;
+    }
+    canvas {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      background-color: black;
+    }
+  </style>
+</head>
+<body>
+    <canvas id="gravitygame"></canvas>
+<script>
+var TAU = 2 * Math.PI
+var ctx = document.getElementById('gravitygame').getContext('2d');
+var player = {
+  x: 0.5,
+  y: 0,
+  r: 30,
+  color: "red"
+}
+var obstacles = [
+  {
+    x: 0.5,
+    y: 0.5,
+    r: 100,
+    color: "gray"
+  }
+]
+
+function init() {
+  ctx.canvas.width = window.innerWidth;
+  ctx.canvas.height = window.innerHeight;
+  ctx.moveTo(0,0);
+  ctx.lineTo(ctx.canvas.width, ctx.canvas.height);
+  ctx.stroke();
+  for (var i = 0; i < 20; i++) {
+    obstacles.push({
+      x: Math.random(),
+      y: 0.2+0.8*Math.random(),
+      r: 10+50*Math.random(),
+      color: "gray"
+    })
+  }
+  var gameClock = setInterval(function() {
+    applyGravity();
+    clear()
+    for (obstacle of obstacles) {
+      if (distance(obstacle, player) < obstacle.r+player.r) {
+        console.log(obstacle)
+        console.log(player)
+        console.log(distance(obstacle, player))
+        alert("You hit an obstacle and died, game over!");
+        clearTimeout(gameClock);
+      }
+      drawThing(obstacle);
+    }
+    drawThing(player);
+    if (player.y > 1) {
+      alert("You won the game!");
+      clearTimeout(gameClock);
+    }
+  }, 50)
+}
+
+function applyGravity () {
+  player.y += 0.005;
+}
+
+function clear() {
+  ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+}
+
+function distance(first, second) {
+  var distX = ctx.canvas.width*(second.x-first.x)
+  var distY = ctx.canvas.height*(second.y-first.y)
+  return Math.sqrt(distX*distX + distY*distY);
+}
+
+function drawThing(thing) {
+  ctx.beginPath();
+  ctx.arc(ctx.canvas.width*thing.x, ctx.canvas.height*thing.y, thing.r, 0, TAU);
+  ctx.fillStyle = thing.color;
+  ctx.fill();
+}
+init()
+
+document.addEventListener("click", function (e) {
+  if (e.x > ctx.canvas.width/2) {
+    // go right
+    player.x += 0.02;
+  } else {
+    player.x -= 0.02;
+  }
+})
+</script>
+</body>
+</html>
