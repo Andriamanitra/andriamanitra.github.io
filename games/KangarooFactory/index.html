@@ -1,0 +1,225 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Kangaroo Factory</title>
+<meta charset="utf-8">
+<link rel="shortcut icon" href="http://kumm.itus.fi/games/KangarooFactory/favico.ico" />
+<style type="text/css">
+body {
+    text-align: center;
+    font-family: "Courier New";
+}
+.hcontainer {
+    margin: 20px auto;
+    display: table;
+}
+.bordered {
+    border: 1px solid black;
+    border-radius: 15px;
+}
+h2 {
+    display: table-row;
+    float: left;
+    padding: 10px;
+    margin: 20px;
+}
+h3 {
+    padding: 10px;
+    margin: 10px auto;
+}
+@keyframes attemptanimation {
+    0% { top: 100%; }
+    30% { transform: rotate(180deg); top: 40%; }
+    75% { opacity: 1; }
+    85% { top: 0%; transform: rotate(360deg); opacity: 0.85; }
+    100% { top: 0%; transform: rotate(360deg); opacity: 0; }
+}
+@keyframes fadeinout {
+    0% { opacity: 0.05; }
+    20% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { opacity: 0; }
+}
+img {
+    -ms-transform-origin: 50% 50%;
+    -webkit-transform-origin: 50% 50%;
+    transform-origin: 50% 50%;
+}
+#infofield {
+    opacity: 0;
+    animation-name: fadeinout;
+    animation-duration: 5s;
+}
+#attempt {
+    position: fixed;
+    top: 100%;
+    left: 50%;
+}
+.anim {
+    animation-name: attemptanimation;
+    animation-duration: 4s;
+}
+</style>
+</head>
+<body>
+<h1>Kangaroo Factory</h1>
+
+<div class="hcontainer bordered">
+<h2 class="bordered">Kangaroos in stock: <div id="kangaroos_in_stock">0</div></h2>
+<h2 class="bordered">Total kangaroos manufactured: <div id="kangaroos_manufactured">0</div></h2>
+</div>
+
+<div class="hcontainer">
+<h3 id="buildercount" class="bordered" hidden>Kangaroo builders: <div id="builders">0</div></h3>
+<h3 id="assemblylinecount" class="bordered" hidden>Kangaroo assembly lines: <div id="assemblylines">0</div></h3>
+</div>
+
+<button onclick="attempt_manufacture()">Attempt to manufacture a kangaroo!</button><br>
+<button id="hirebuilder" onclick="hire_builder()" hidden>Hire a kangaroo builder!</button><br>
+<button id="buildassemblyline" onclick="build_assembly_line()" hidden>Build a kangaroo assembly line!</button><br>
+
+<button id="kangarooviagra" onclick="give_viagra()" hidden>Give your kangaroos a truckload of viagra! (cost: 5000 kangaroos)</button><br>
+
+<div id="infofield">You have made the wise decision of starting a kangaroo factory! You should try to manufacture some.</div>
+
+<div id="attempt"><img style="position: relative; left:-233px" src="attempt.png"></div>
+<script>
+var manufactured = 0
+var in_stock = 0
+
+var builders = 0
+var builder_cost = () => 25+builders
+
+var assembly_lines = 0
+var assembly_line_cost = () => 1000+100*assembly_lines
+
+var boostInterval
+
+var current_unlockable = 0
+var unlockables = [
+    {
+        condition: function() { return (manufactured >= 10) },
+        locked: true,
+        unlock: function() {
+            document.getElementById("buildercount").hidden = false
+            document.getElementById("hirebuilder").hidden = false
+            builderInterval = setInterval(function() {
+                manufacture_kangaroo(builders)
+            }, 2000);
+        }
+    },
+    {
+        condition: function() { return (manufactured >= 500) },
+        locked: true,
+        unlock: function() {
+            document.getElementById("assemblylinecount").hidden = false
+            document.getElementById("buildassemblyline").hidden = false
+            builderInterval = setInterval(function() {
+                manufacture_kangaroo(assembly_lines)
+            }, 200);
+        }
+    },
+    {
+        condition: function() { return (manufactured >= 9001) },
+        locked: true,
+        unlock: function() {
+            info("Gratz on manufacturing over 9000 kangaroos! Quite an achievement!")
+            document.getElementById("kangarooviagra").hidden = false
+        }
+    },
+]
+
+function info(txt) {
+    var el = document.getElementById("infofield")
+    el.innerHTML = txt
+    el.style.animation = "none"
+    el.offsetHeight;
+    el.style.animation = null
+}
+
+function attempt_manufacture() {
+    if (Math.random() > 0.03) {
+        manufacture_kangaroo()
+    }
+    else {
+        attempt()
+    }
+}
+
+function attempt() {
+    var el = document.getElementById("attempt")
+    el.className = "anim"
+    el.style.animation = "none"
+    el.offsetHeight;
+    el.style.animation = null
+}
+
+function manufacture_kangaroo(n=1) {
+    manufactured += n
+    in_stock += n
+    updateView()
+}
+
+function give_viagra() {
+    if (in_stock > 5000) {
+        in_stock -= 5000
+        document.getElementById("kangarooviagra").hidden = true
+        info("Your kangaroos started mating like crazy! This is amazing!")
+        boostInterval = setInterval(function() {
+            manufacture_kangaroo(Math.floor(in_stock*0.15))
+        }, 450);
+        setTimeout(function() {
+            clearInterval(boostInterval)
+            info("The effects of viagra have worn off...")
+            document.getElementById("kangarooviagra").hidden = false
+        }, 5000);
+    }
+    else {
+        info("Not enough kangaroos...")
+    }
+}
+
+function updateView() {
+  document.getElementById("kangaroos_manufactured").innerHTML = manufactured
+  document.getElementById("kangaroos_in_stock").innerHTML = in_stock
+  document.getElementById("builders").innerHTML = builders.toString()+" ("+(builders*0.5).toString()+" kangaroos per second)"
+  document.getElementById("hirebuilder").innerHTML = "Hire a kangaroo builder! (cost: "+builder_cost().toString()+" kangaroos)"
+  document.getElementById("buildassemblyline").innerHTML = "Build a kangaroo assembly line! (cost: "+assembly_line_cost().toString()+" kangaroos)"
+  document.getElementById("assemblylines").innerHTML = assembly_lines.toString()+" ("+(assembly_lines*50).toString()+" kangaroos per second)"
+  checkUnlockables()
+}
+
+function checkUnlockables() {
+    for (var i = 0; i <= unlockables.length - 1; i++) {
+        if (unlockables[i].locked && unlockables[i].condition()) {
+            unlockables[i].locked = false
+            unlockables[i].unlock()
+        }
+    }
+}
+
+function hire_builder() {
+    if (in_stock >= builder_cost()) {
+        in_stock -= builder_cost()
+        builders += 1
+        updateView()
+    }
+    else {
+        info("Not enough kangaroos...")
+    }
+}
+
+function build_assembly_line() {
+    if (in_stock >= assembly_line_cost()) {
+        in_stock -= assembly_line_cost()
+        assembly_lines += 1
+        updateView()
+    }
+    else {
+        info("Not enough kangaroos...")
+    }
+}
+
+</script>
+</body>
+</html>
