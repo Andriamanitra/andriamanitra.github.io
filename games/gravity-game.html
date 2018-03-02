@@ -6,6 +6,7 @@
   <style>
     html, body {
       padding: 0;
+      font-family: Consolas;
     }
     canvas {
       position: absolute;
@@ -15,65 +16,140 @@
       bottom: 0;
       background-color: black;
     }
+    #score-container {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      min-width: 120px;
+      text-align: center;
+      background-color: rgba(68, 68, 68, 0.5);
+      padding: 10px 50px 10px 50px;
+      border-radius: 20px;
+      color: rgb(31, 168, 72);
+      z-index: 1000;
+    }
+    #game-over {
+      position: absolute;
+      left: 0; right: 0;
+      top: 20%;
+      text-align: center;
+      padding-top: 10%;
+      padding-bottom: 10%;
+      color: white;
+      z-index: 1000;
+      background-color: rgba(68, 68, 68, 0.5);
+      visibility: hidden;
+    }
+    .clickable {
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
-    <canvas id="gravitygame"></canvas>
+  <div id="score-container">Score: <span id="score">0</span></div>
+  <div id="game-over">
+    <h1>Game over!</h1>
+    <h2 id="game-over-description"></h2>
+    <h2>Press <span class="clickable" onclick="init()">N</span> to start a <span class="clickable" onclick="init()">n</span>ew game</h2>
+  </div>
+  <canvas id="gravitygame"></canvas>
 <script>
-var TAU = 2 * Math.PI
+var TAU = 2 * Math.PI;
 var ctx = document.getElementById('gravitygame').getContext('2d');
-var player = {
-  x: 0.5,
-  y: 0,
-  r: 30,
-  color: "red"
-}
-var obstacles = [
-  {
-    x: 0.5,
-    y: 0.5,
-    r: 100,
-    color: "gray"
-  }
-]
+var prevFrame = 0;
+var gameOver;
+var gameSize;
+var scores;
+var level;
+var player, obstacles;
+var mousePos = {x: 0.5, y: 0.5};
 
 function init() {
-  ctx.canvas.width = window.innerWidth;
+  document.getElementById("game-over").style.visibility = "hidden";
+  gameSize = window.innerWidth;
+  prevFrame = 0;
+  scores = [];
+  ctx.canvas.width = gameSize;
   ctx.canvas.height = window.innerHeight;
-  ctx.moveTo(0,0);
-  ctx.lineTo(ctx.canvas.width, ctx.canvas.height);
-  ctx.stroke();
-  for (var i = 0; i < 20; i++) {
-    obstacles.push({
-      x: Math.random(),
-      y: 0.2+0.8*Math.random(),
-      r: 10+50*Math.random(),
-      color: "gray"
-    })
-  }
-  var gameClock = setInterval(function() {
+  gameOver = false;
+  startLevel(1);
+  window.requestAnimationFrame(gameLoop);
+}
+
+function gameLoop(timestamp) {
+  var gameOverText;
+  
+  if (!prevFrame) {
+    prevFrame = timestamp;
+  } else {
+    var progress = timestamp - prevFrame;
     applyGravity();
+    applyPlayerInput();
+    applyAirResistance();
+    applySpeed(player, false);
+    addScore(-1);
     clear()
     for (obstacle of obstacles) {
+      applySpeed(obstacle, true);
       if (distance(obstacle, player) < obstacle.r+player.r) {
-        console.log(obstacle)
-        console.log(player)
-        console.log(distance(obstacle, player))
-        alert("You hit an obstacle and died, game over!");
-        clearTimeout(gameClock);
+        gameOverText = "You hit an obstacle and died, game over!";
+        scores[scores.length-1] = 0;
+        gameOver = true;
       }
       drawThing(obstacle);
     }
     drawThing(player);
-    if (player.y > 1) {
-      alert("You won the game!");
-      clearTimeout(gameClock);
+    if (outOfBounds(player)) {
+      gameOverText = "You got lost in the unknown and died. Game over!"
+      scores[scores.length-1] = 0;
+      gameOver = true;
     }
-  }, 50)
+    if (player.y > 1) {
+      if (level > 9) {
+        gameOverText = "You won the game!";
+        gameOver = true;
+      } else {
+        startLevel(level+1);
+      }
+    }
+  }
+  if (!gameOver) {
+    window.requestAnimationFrame(gameLoop);
+  } else {
+    showGameOverDialog(gameOverText);
+  };
+}
+
+function addScore(n) {
+  scores[scores.length-1] = Math.floor(scores[scores.length-1] + n);
+  document.getElementById("score").innerHTML = totalScore();
+}
+
+function applyAirResistance() {
+  var gravityStrength = 0.00001;
+  var maxSpeed = 0.0035;
+  var slowDown = Math.abs(player.ySpeed) / maxSpeed * gravityStrength;
+  player.ySpeed = player.ySpeed - Math.sign(player.ySpeed) * slowDown;
 }
 
 function applyGravity () {
-  player.y += 0.005;
+  player.ySpeed += 0.00001;
+}
+
+function applyPlayerInput() {
+  player.xSpeed -= 0.00007*(player.x - mousePos.x);
+}
+
+function applySpeed (thing, bounceback) {
+  thing.y += thing.ySpeed;
+  thing.x += thing.xSpeed;
+  if (bounceback) {
+    if (thing.x < 0) {
+      thing.xSpeed = Math.abs(thing.xSpeed);
+    } else if (thing.x > 1) {
+      thing.xSpeed = -Math.abs(thing.xSpeed);
+    }
+  }
 }
 
 function clear() {
@@ -92,16 +168,74 @@ function drawThing(thing) {
   ctx.fillStyle = thing.color;
   ctx.fill();
 }
-init()
+
+function outOfBounds(thing) {
+  return thing.x < -0.1 || thing.x > 1.1 || thing.y < -0.1
+}
+
+function randomObstacleSpeed(levelNumber) {
+  var maxSpeed = (0.0005 + 0.00015*levelNumber)
+  return 2 * maxSpeed * Math.random() - maxSpeed;
+}
+
+function showGameOverDialog(gameOverText) {
+  var dialogText = "<p>"+gameOverText + "</p><p>Your scores:<br>";
+  for (var i = 0; i < scores.length; i++) {
+    dialogText += "Level "+(i+1)+":\t"+(scores[i])+"<br>";
+  }
+  dialogText += "Total:\t"+totalScore()+"</p>";
+  document.getElementById("game-over-description").innerHTML = dialogText;
+  document.getElementById("game-over").style.visibility = "visible";
+}
+
+function startLevel(levelNumber) {
+  level = levelNumber;
+  document.title = "Gravity game - level "+level;
+  scores.push(1000*level + 9000);
+  player = {
+    x: 0.5,
+    y: 0,
+    r: 30,
+    color: "#ff00ff",
+    xSpeed: 0,
+    ySpeed: 0,
+  };
+  obstacles = [];
+  for (var i = 0; i < 5*level + 10; i++) {
+    obstacles.push({
+      x: Math.random(),
+      y: 0.2+0.8*Math.random(),
+      r: 10+50*Math.random(),
+      color: "gray",
+      xSpeed: level > 2 ? randomObstacleSpeed(level) : 0,
+      ySpeed: 0.001*Math.random()/level
+    });
+  }
+}
+
+function totalScore() {
+  return scores.reduce((a, b) => a+b);
+}
+
+document.addEventListener("mousemove", function (e) {
+  mousePos = {x: e.x/ctx.canvas.width, y: e.y/ctx.canvas.height};
+});
 
 document.addEventListener("click", function (e) {
-  if (e.x > ctx.canvas.width/2) {
-    // go right
-    player.x += 0.02;
-  } else {
-    player.x -= 0.02;
+  var xDist = mousePos.x - player.x;
+  var yDist = mousePos.y - player.y;
+  var angle = Math.atan2(yDist, xDist);
+  player.ySpeed += Math.sin(angle)*0.002;
+  player.xSpeed += Math.cos(angle)*0.002;
+});
+
+window.addEventListener("keydown", function (e) {
+  if (e.key === "n" || e.key === "N") {
+    init();
   }
 })
+
+init();
 </script>
 </body>
 </html>
