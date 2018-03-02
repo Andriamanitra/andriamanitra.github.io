@@ -78,15 +78,18 @@ function init() {
 
 function gameLoop(timestamp) {
   var gameOverText;
-  
   if (!prevFrame) {
     prevFrame = timestamp;
   } else {
-    var progress = timestamp - prevFrame;
-    applyGravity();
-    applyPlayerInput();
-    applyAirResistance();
-    applySpeed(player, false);
+    // divide progress by 7 for now because I initially forgot to include it
+    // and balanced the whole thing around 144Hz (~7ms per frame)
+    // needs to be properly fixed later...
+    var progress = (timestamp - prevFrame)/7;
+    prevFrame = timestamp;
+    applyGravity(progress);
+    applyPlayerInput(progress);
+    applyAirResistance(progress);
+    applySpeed(player, progress, false);
     addScore(-1);
     clear()
     for (obstacle of obstacles) {
@@ -125,24 +128,24 @@ function addScore(n) {
   document.getElementById("score").innerHTML = totalScore();
 }
 
-function applyAirResistance() {
+function applyAirResistance(progress) {
   var gravityStrength = 0.00001;
   var maxSpeed = 0.0035;
   var slowDown = Math.abs(player.ySpeed) / maxSpeed * gravityStrength;
-  player.ySpeed = player.ySpeed - Math.sign(player.ySpeed) * slowDown;
+  player.ySpeed = player.ySpeed - Math.sign(player.ySpeed) * slowDown * progress;
 }
 
-function applyGravity () {
-  player.ySpeed += 0.00001;
+function applyGravity (progress) {
+  player.ySpeed += 0.00001 * progress;
 }
 
-function applyPlayerInput() {
-  player.xSpeed -= 0.00007*(player.x - mousePos.x);
+function applyPlayerInput(progress) {
+  player.xSpeed -= 0.00007*(player.x - mousePos.x) * progress;
 }
 
-function applySpeed (thing, bounceback) {
-  thing.y += thing.ySpeed;
-  thing.x += thing.xSpeed;
+function applySpeed (thing, progress, bounceback) {
+  thing.y += thing.ySpeed * progress;
+  thing.x += thing.xSpeed * progress;
   if (bounceback) {
     if (thing.x < 0) {
       thing.xSpeed = Math.abs(thing.xSpeed);
