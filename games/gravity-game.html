@@ -93,7 +93,7 @@ function gameLoop(timestamp) {
     addScore(-1);
     clear()
     for (obstacle of obstacles) {
-      applySpeed(obstacle, true);
+      applySpeed(obstacle, progress, true);
       if (distance(obstacle, player) < obstacle.r+player.r) {
         gameOverText = "You hit an obstacle and died, game over!";
         scores[scores.length-1] = 0;
