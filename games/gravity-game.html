@@ -94,7 +94,7 @@ function gameLoop(timestamp) {
     clear()
     for (obstacle of obstacles) {
       applySpeed(obstacle, progress, true);
-      if (distance(obstacle, player) < obstacle.r+player.r) {
+      if (distance(obstacle, player) < obstacle.r + player.r) {
         gameOverText = "You hit an obstacle and died.";
         scores[scores.length-1] = 0;
         gameOver = true;
@@ -112,7 +112,7 @@ function gameLoop(timestamp) {
         gameOverText = "You won the game!";
         gameOver = true;
       } else {
-        startLevel(level+1);
+        startLevel(level + 1);
       }
     }
   }
@@ -160,8 +160,8 @@ function clear() {
 }
 
 function distance(first, second) {
-  var distX = ctx.canvas.width*(second.x-first.x)
-  var distY = ctx.canvas.height*(second.y-first.y)
+  var distX = ctx.canvas.width * (second.x - first.x);
+  var distY = ctx.canvas.height * (second.y - first.y);
   return Math.sqrt(distX*distX + distY*distY);
 }
 
@@ -173,7 +173,8 @@ function drawThing(thing) {
 }
 
 function outOfBounds(thing) {
-  return thing.x < -0.1 || thing.x > 1.1 || thing.y < -0.1
+  var w = ctx.canvas.width;
+  return thing.x * w + 2*thing.r < 0 || thing.x * w - 2*thing.r > w || thing.y < -0.1
 }
 
 function randomObstacleSpeed(levelNumber) {
@@ -198,7 +199,7 @@ function startLevel(levelNumber) {
   player = {
     x: 0.5,
     y: 0,
-    r: 30,
+    r: 0.02*ctx.canvas.height,
     color: "#ff00ff",
     xSpeed: 0,
     ySpeed: 0,
@@ -208,7 +209,7 @@ function startLevel(levelNumber) {
     obstacles.push({
       x: Math.random(),
       y: 0.2+0.8*Math.random(),
-      r: 10+50*Math.random(),
+      r: (0.007+0.045*Math.random())*ctx.canvas.height,
       color: "gray",
       xSpeed: level > 2 ? randomObstacleSpeed(level) : 0,
       ySpeed: 0.001*Math.random()/level
