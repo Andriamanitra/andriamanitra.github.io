@@ -95,7 +95,7 @@ function gameLoop(timestamp) {
     for (obstacle of obstacles) {
       applySpeed(obstacle, progress, true);
       if (distance(obstacle, player) < obstacle.r+player.r) {
-        gameOverText = "You hit an obstacle and died, game over!";
+        gameOverText = "You hit an obstacle and died.";
         scores[scores.length-1] = 0;
         gameOver = true;
       }
@@ -103,7 +103,7 @@ function gameLoop(timestamp) {
     }
     drawThing(player);
     if (outOfBounds(player)) {
-      gameOverText = "You got lost in the unknown and died. Game over!"
+      gameOverText = "You got lost in the unknown and died."
       scores[scores.length-1] = 0;
       gameOver = true;
     }
