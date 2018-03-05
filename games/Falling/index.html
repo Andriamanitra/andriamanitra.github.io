@@ -110,7 +110,7 @@
     <h2>How to play:</h2>
     <p>Get to the bottom of the screen without hitting obstacles to advance to next level.<br>
     Move mouse to control the direction of your fall.<br>
-    Click to boost toward the cursor.<br>
+    Click to boost toward the cursor. (costs 500 points)<br>
     You get a number of points at the start of each level and lose points as you spend time, so try to be quick!</p>
     <p class="clickable" onclick="hideGameInfo()">[close]</p>
   </div>
@@ -154,11 +154,11 @@ function gameLoop(timestamp) {
     // needs to be properly fixed later...
     var progress = (timestamp - prevFrame)/7;
     prevFrame = timestamp;
-    applyGravity(progress);
+    applyGravity(player, progress);
     applyPlayerInput(progress);
     applyAirResistance(progress);
     applySpeed(player, progress, false);
-    addScore(-1);
+    addScore(-progress);
     clear();
     drawParticles(progress);
     for (obstacle of obstacles) {
@@ -172,7 +172,7 @@ function gameLoop(timestamp) {
     }
     drawThing(player);
     if (outOfBounds(player)) {
-      gameOverText = "You got lost in the unknown and died."
+      gameOverText = "You got lost in the unknown and died.";
       scores[scores.length-1] = 0;
       gameOver = true;
     }
@@ -204,8 +204,8 @@ function applyAirResistance(progress) {
   player.ySpeed = player.ySpeed - Math.sign(player.ySpeed) * slowDown * progress;
 }
 
-function applyGravity (progress) {
-  player.ySpeed += 0.00001 * progress;
+function applyGravity (thing, progress) {
+  thing.ySpeed += 0.00001 * progress;
 }
 
 function applyPlayerInput(progress) {
@@ -240,6 +240,7 @@ function drawParticles(progress) {
       var opacity = particleSet.life/300;
       for (var p of particleSet.particles) {
         applySpeed(p, progress, false);
+        applyGravity(p, progress);
         ctx.beginPath();
         ctx.arc(Math.floor(ctx.canvas.width*p.x), Math.floor(ctx.canvas.height*p.y), p.r, 0, TAU);
         ctx.fillStyle = "rgba(155,0,155,"+opacity+")";
@@ -337,6 +338,7 @@ document.body.addEventListener("click", function (e) {
   var angle = Math.atan2(yDist, xDist);
   player.ySpeed += Math.sin(angle)*0.002;
   player.xSpeed += Math.cos(angle)*0.002;
+  addScore(-500);
 
   spawnParticles(player.x, player.y, angle);
 });
