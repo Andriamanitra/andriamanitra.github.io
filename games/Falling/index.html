@@ -122,6 +122,12 @@
   <div id="score-container">Score: <span id="score">0</span></div>
   <canvas id="gravitygame"></canvas>
 <script>
+var settings = {
+  gravityStrength: 0.00001,
+  playerSize: 0.02,
+  particleSize: 0.007,
+  particleLife: 500,
+}
 var TAU = 2 * Math.PI;
 var ctx = document.getElementById('gravitygame').getContext('2d');
 var prevFrame = 0;
@@ -149,20 +155,17 @@ function gameLoop(timestamp) {
   if (!prevFrame) {
     prevFrame = timestamp;
   } else {
-    // divide progress by 7 for now because I initially forgot to include it
-    // and balanced the whole thing around 144Hz (~7ms per frame)
-    // needs to be properly fixed later...
     var progress = timestamp - prevFrame;
     prevFrame = timestamp;
-    applyGravity(player, progress/7);
-    applyPlayerInput(progress/7);
-    applyAirResistance(progress/7);
-    applySpeed(player, progress/7, false);
+    applyGravity(player, progress);
+    applyPlayerInput(progress);
+    applyAirResistance(progress);
+    applySpeed(player, progress, false);
     addScore(-progress);
     clear();
-    drawParticles(progress/7);
+    drawParticles(progress);
     for (obstacle of obstacles) {
-      applySpeed(obstacle, progress/7, true);
+      applySpeed(obstacle, progress, true);
       if (distance(obstacle, player) < obstacle.r + player.r) {
         gameOverText = "You hit an obstacle and died.";
         scores[scores.length-1] = 0;
@@ -198,23 +201,22 @@ function addScore(n) {
 }
 
 function applyAirResistance(progress) {
-  var gravityStrength = 0.00001;
   var maxSpeed = 0.0035;
-  var slowDown = Math.abs(player.ySpeed) / maxSpeed * gravityStrength;
-  player.ySpeed = player.ySpeed - Math.sign(player.ySpeed) * slowDown * progress;
+  var slowDown = Math.abs(player.ySpeed) / maxSpeed * settings.gravityStrength;
+  player.ySpeed = player.ySpeed - Math.sign(player.ySpeed) * slowDown * progress/7;
 }
 
 function applyGravity (thing, progress) {
-  thing.ySpeed += 0.00001 * progress;
+  thing.ySpeed += settings.gravityStrength * progress/7;
 }
 
 function applyPlayerInput(progress) {
-  player.xSpeed -= 0.00007*(player.x - mousePos.x) * progress;
+  player.xSpeed -= 0.00001*(player.x - mousePos.x) * progress;
 }
 
 function applySpeed (thing, progress, bounceback) {
-  thing.y += thing.ySpeed * progress;
-  thing.x += thing.xSpeed * progress;
+  thing.y += thing.ySpeed * progress/7;
+  thing.x += thing.xSpeed * progress/7;
   if (bounceback) {
     if (thing.x < 0) {
       thing.xSpeed = Math.abs(thing.xSpeed);
@@ -237,7 +239,7 @@ function distance(first, second) {
 function drawParticles(progress) {
   for (var particleSet of particleSets) {
     if (particleSet.life > 0) {
-      var opacity = particleSet.life/300;
+      var opacity = particleSet.life/(2*settings.particleLife);
       for (var p of particleSet.particles) {
         applySpeed(p, progress, false);
         applyGravity(p, progress);
@@ -268,8 +270,12 @@ function outOfBounds(thing) {
 }
 
 function randomObstacleSpeed(levelNumber) {
-  var maxSpeed = (0.0005 + 0.00015*levelNumber)
-  return 2 * maxSpeed * Math.random() - maxSpeed;
+  var maxSpeed = (0.0005 + 0.00015*levelNumber);
+  return randBetween(-maxSpeed, maxSpeed);
+}
+
+function randBetween(lower, higher) {
+  return lower + Math.random()*(higher-lower);
 }
 
 function showGameOverDialog(gameOverText) {
@@ -284,16 +290,17 @@ function showGameOverDialog(gameOverText) {
 
 function spawnParticles(x, y, angle) {
   particleSets.push({
-    life: 100,
+    life: settings.particleLife,
     particles: []
   });
+  var halfPlayerSize = settings.playerSize/2;
   for (var i = 0; i < amountOfParticles; i++) {
     particleSets[particleSets.length-1].particles.push({
-      x: x - 0.015 + Math.random()*0.03,
-      y: y - 0.015 + Math.random()*0.03,
-      r: 0.007*ctx.canvas.height,
-      xSpeed: -0.0015*Math.cos(angle)+0.001*Math.random(),
-      ySpeed: -0.0015*Math.sin(angle)+0.001*Math.random()
+      x: x - randBetween(-settings.playerSize, settings.playerSize),
+      y: y - randBetween(-settings.playerSize, settings.playerSize),
+      r: settings.particleSize*ctx.canvas.height,
+      xSpeed: -0.0015*Math.cos(angle) + 0.001*Math.random(),
+      ySpeed: -0.0015*Math.sin(angle) + 0.001*Math.random()
     });
   }
 }
@@ -305,7 +312,7 @@ function startLevel(levelNumber) {
   player = {
     x: 0.5,
     y: 0,
-    r: 0.02*ctx.canvas.height,
+    r: settings.playerSize * ctx.canvas.height,
     color: "#ff00ff",
     xSpeed: 0,
     ySpeed: 0,
@@ -314,8 +321,8 @@ function startLevel(levelNumber) {
   for (var i = 0; i < 5*level + 10; i++) {
     obstacles.push({
       x: Math.random(),
-      y: 0.2+0.8*Math.random(),
-      r: (0.007+0.045*Math.random())*ctx.canvas.height,
+      y: randBetween(0.2, 1),
+      r: randBetween(0.007, 0.052)*ctx.canvas.height,
       color: "gray",
       xSpeed: level > 2 ? randomObstacleSpeed(level) : 0,
       ySpeed: 0.001*Math.random()/level
