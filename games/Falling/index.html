@@ -152,17 +152,17 @@ function gameLoop(timestamp) {
     // divide progress by 7 for now because I initially forgot to include it
     // and balanced the whole thing around 144Hz (~7ms per frame)
     // needs to be properly fixed later...
-    var progress = (timestamp - prevFrame)/7;
+    var progress = timestamp - prevFrame;
     prevFrame = timestamp;
-    applyGravity(player, progress);
-    applyPlayerInput(progress);
-    applyAirResistance(progress);
-    applySpeed(player, progress, false);
+    applyGravity(player, progress/7);
+    applyPlayerInput(progress/7);
+    applyAirResistance(progress/7);
+    applySpeed(player, progress/7, false);
     addScore(-progress);
     clear();
-    drawParticles(progress);
+    drawParticles(progress/7);
     for (obstacle of obstacles) {
-      applySpeed(obstacle, progress, true);
+      applySpeed(obstacle, progress/7, true);
       if (distance(obstacle, player) < obstacle.r + player.r) {
         gameOverText = "You hit an obstacle and died.";
         scores[scores.length-1] = 0;
