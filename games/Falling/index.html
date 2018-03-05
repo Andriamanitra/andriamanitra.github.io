@@ -11,13 +11,21 @@
       font-family: Consolas;
       overflow: hidden;
     }
-    canvas {
+    #gravitygame {
       position: absolute;
       left: 0;
       right: 0;
       top: 0;
       bottom: 0;
       background-color: black;
+    }
+    #particles {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      z-index: 100;
     }
     a {
       color: rgb(153, 153, 153);
@@ -118,19 +126,19 @@ var TAU = 2 * Math.PI;
 var ctx = document.getElementById('gravitygame').getContext('2d');
 var prevFrame = 0;
 var gameOver;
-var gameSize;
 var scores;
 var level;
-var player, obstacles;
+var player, obstacles, particleSets;
+var amountOfParticles = 20;
 var mousePos = {x: 0.5, y: 0.5};
 
 function init() {
   document.getElementById("game-over").style.visibility = "hidden";
-  gameSize = window.innerWidth;
   prevFrame = 0;
   scores = [];
-  ctx.canvas.width = gameSize;
+  ctx.canvas.width = window.innerWidth;
   ctx.canvas.height = window.innerHeight;
+
   gameOver = false;
   startLevel(1);
   window.requestAnimationFrame(gameLoop);
@@ -151,7 +159,8 @@ function gameLoop(timestamp) {
     applyAirResistance(progress);
     applySpeed(player, progress, false);
     addScore(-1);
-    clear()
+    clear();
+    drawParticles(progress);
     for (obstacle of obstacles) {
       applySpeed(obstacle, progress, true);
       if (distance(obstacle, player) < obstacle.r + player.r) {
@@ -225,6 +234,22 @@ function distance(first, second) {
   return Math.sqrt(distX*distX + distY*distY);
 }
 
+function drawParticles(progress) {
+  for (var particleSet of particleSets) {
+    if (particleSet.life > 0) {
+      var opacity = particleSet.life/300;
+      for (var p of particleSet.particles) {
+        applySpeed(p, progress, false);
+        ctx.beginPath();
+        ctx.arc(Math.floor(ctx.canvas.width*p.x), Math.floor(ctx.canvas.height*p.y), p.r, 0, TAU);
+        ctx.fillStyle = "rgba(155,0,155,"+opacity+")";
+        ctx.fill();
+      }
+      particleSet.life -= progress;
+    }
+  }
+}
+
 function drawThing(thing) {
   ctx.beginPath();
   ctx.arc(ctx.canvas.width*thing.x, ctx.canvas.height*thing.y, thing.r, 0, TAU);
@@ -256,6 +281,22 @@ function showGameOverDialog(gameOverText) {
   document.getElementById("game-over").style.visibility = "visible";
 }
 
+function spawnParticles(x, y, angle) {
+  particleSets.push({
+    life: 100,
+    particles: []
+  });
+  for (var i = 0; i < amountOfParticles; i++) {
+    particleSets[particleSets.length-1].particles.push({
+      x: x - 0.015 + Math.random()*0.03,
+      y: y - 0.015 + Math.random()*0.03,
+      r: 0.007*ctx.canvas.height,
+      xSpeed: -0.0015*Math.cos(angle)+0.001*Math.random(),
+      ySpeed: -0.0015*Math.sin(angle)+0.001*Math.random()
+    });
+  }
+}
+
 function startLevel(levelNumber) {
   level = levelNumber;
   document.title = "Gravity game - level "+level;
@@ -279,6 +320,7 @@ function startLevel(levelNumber) {
       ySpeed: 0.001*Math.random()/level
     });
   }
+  particleSets = [];
 }
 
 function totalScore() {
@@ -295,6 +337,8 @@ document.body.addEventListener("click", function (e) {
   var angle = Math.atan2(yDist, xDist);
   player.ySpeed += Math.sin(angle)*0.002;
   player.xSpeed += Math.cos(angle)*0.002;
+
+  spawnParticles(player.x, player.y, angle);
 });
 
 window.addEventListener("keydown", function (e) {
