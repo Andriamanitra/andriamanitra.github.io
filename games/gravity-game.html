@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Gravity game</title>
+  <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet"> 
   <style>
     html, body {
       padding: 0;
@@ -17,6 +18,44 @@
       bottom: 0;
       background-color: black;
     }
+    a {
+      color: rgb(153, 153, 153);
+    }
+    #game-info-button {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      width: 50px;
+      height: 50px;
+      font-family: "Roboto", bold;
+      font-size: 42px;
+      font-weight: bold;
+      text-align: center;
+      border: 2px solid rgba(0,0,0,0);
+      border-radius: 100px;
+      background-color: rgba(255, 255, 255, 0.212);
+      color: rgba(0, 0, 0, 0.644);
+      z-index: 1000;
+      -moz-user-select: none;
+      user-select: none;
+    }
+    #game-info-checkbox {
+      position: absolute;
+      opacity: 0;
+    }
+    #game-info-checkbox:checked ~ #game-info-button {
+      border-color: white;
+    }
+    #game-info-checkbox:checked ~ #game-info {
+      visibility: visible;
+    }
+    #game-info-checkbox:checked ~ #game-over {
+      z-index: 0;
+    }
+    #game-info-button:hover {
+      color: rgba(255, 255, 255, 0.315);
+      border-color: rgba(255,255,255,0.5);
+    }
     #score-container {
       position: absolute;
       right: 20px;
@@ -29,30 +68,49 @@
       color: rgb(31, 168, 72);
       z-index: 1000;
     }
-    #game-over {
+    .overlay {
       position: absolute;
       left: 0; right: 0;
       top: 15%;
       text-align: center;
-      padding-top: 7%;
+      padding-left: 25%;
+      padding-right: 25%;
+      padding-top: 5%;
       padding-bottom: 7%;
       color: white;
       z-index: 1000;
-      background-color: rgba(68, 68, 68, 0.5);
       visibility: hidden;
+      background-color: rgba(68, 68, 68, 0.5);
     }
     .clickable {
       cursor: pointer;
     }
+    p.clickable:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
-  <div id="score-container">Score: <span id="score">0</span></div>
-  <div id="game-over">
+  <input id="game-info-checkbox" type="checkbox">
+  <label class="clickable" for="game-info-checkbox" id="game-info-button" title="Game information">?</label>
+  <div class="overlay" id="game-info">
+    <h1>Game information</h1>
+    <p>This game was made for <a href="https://www.reddit.com/r/WebGames/">/r/WebGames</a> game jam themed "gravity".
+      This was the very first idea that came to my mind and I had the first playable version up and running within half an hour of reading the theme. The game is slightly different on different window aspect ratios - feel free to resize the window to see what feels the best.</p>
+      <p>This project is dedicated to the public domain under <a href="http://unlicense.org/">the Unlicense</a>, which means that anyone "is free to copy, modify, publish, use, compile, sell, or distribute this software, either in source code form or as a compiled binary, for any purpose, commercial or non-commercial, and by any means".</p>
+    <h2>How to play:</h2>
+    <p>Get to the bottom of the screen without hitting obstacles to advance to next level.<br>
+    Move mouse to control the direction of your fall.<br>
+    Click to boost toward the cursor.<br>
+    You get a number of points at the start of each level and lose points as you spend time, so try to be quick!</p>
+    <p class="clickable" onclick="hideGameInfo()">[close]</p>
+  </div>
+  <div class="overlay" id="game-over">
     <h1>Game over!</h1>
     <h2 id="game-over-description"></h2>
     <h2>Press <span class="clickable" onclick="init()">N</span> to start a <span class="clickable" onclick="init()">n</span>ew game</h2>
   </div>
+  <div id="score-container">Score: <span id="score">0</span></div>
   <canvas id="gravitygame"></canvas>
 <script>
 var TAU = 2 * Math.PI;
@@ -173,6 +231,10 @@ function drawThing(thing) {
   ctx.fill();
 }
 
+function hideGameInfo() {
+  document.getElementById("game-info-checkbox").checked="";
+}
+
 function outOfBounds(thing) {
   var w = ctx.canvas.width;
   return thing.x * w + 2*thing.r < 0 || thing.x * w - 2*thing.r > w || thing.y < -0.1
@@ -226,7 +288,7 @@ document.addEventListener("mousemove", function (e) {
   mousePos = {x: e.x/ctx.canvas.width, y: e.y/ctx.canvas.height};
 });
 
-document.addEventListener("click", function (e) {
+document.body.addEventListener("click", function (e) {
   var xDist = mousePos.x - player.x;
   var yDist = mousePos.y - player.y;
   var angle = Math.atan2(yDist, xDist);
@@ -238,6 +300,10 @@ window.addEventListener("keydown", function (e) {
   if (e.key === "n" || e.key === "N") {
     init();
   }
+});
+
+window.addEventListener("resize", function(e) {
+  init();
 })
 
 init();
