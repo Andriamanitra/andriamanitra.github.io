@@ -80,6 +80,8 @@ img {
 
 <button id="kangarooviagra" onclick="give_viagra()" hidden>Give your kangaroos a truckload of viagra! (cost: 5000 kangaroos)</button><br>
 
+<button id="researchhammers" onclick="research_hammers()" hidden>Research better hammers for kangaroo builders! (cost: 100 kangaroos)</button><br>
+
 <div id="infofield">You have made the wise decision of starting a kangaroo factory! You should try to manufacture some.</div>
 
 <div id="attempt"><img style="position: relative; left:-233px" src="attempt.png"></div>
@@ -89,13 +91,13 @@ var in_stock = 0
 
 var builders = 0
 var builder_cost = () => 25+builders
+var hammer_efficiency = 1
 
 var assembly_lines = 0
 var assembly_line_cost = () => 1000+100*assembly_lines
 
 var boostInterval
 
-var current_unlockable = 0
 var unlockables = [
     {
         condition: function() { return (manufactured >= 10) },
@@ -104,7 +106,7 @@ var unlockables = [
             document.getElementById("buildercount").hidden = false
             document.getElementById("hirebuilder").hidden = false
             builderInterval = setInterval(function() {
-                manufacture_kangaroo(builders)
+                manufacture_kangaroo(Math.floor(builders*hammer_efficiency))
             }, 2000);
         }
     },
@@ -127,6 +129,13 @@ var unlockables = [
             document.getElementById("kangarooviagra").hidden = false
         }
     },
+    {
+        condition: function() { return (builders > 0) },
+        locked: true,
+        unlock: function() {
+            document.getElementById("researchhammers").hidden = false
+        }
+    }
 ]
 
 function info(txt) {
@@ -140,8 +149,7 @@ function info(txt) {
 function attempt_manufacture() {
     if (Math.random() > 0.03) {
         manufacture_kangaroo()
-    }
-    else {
+    } else {
         attempt()
     }
 }
@@ -173,8 +181,21 @@ function give_viagra() {
             info("The effects of viagra have worn off...")
             document.getElementById("kangarooviagra").hidden = false
         }, 5000);
+    } else {
+        info("Not enough kangaroos...")
     }
-    else {
+}
+
+function research_hammers() {
+    if (in_stock > 100) {
+        in_stock -= 100
+        if (Math.random() > 0.4) {
+            info("You successfully upgraded your hammers by adding some colorful stickers to them! Your kangaroo builders are now 15% more efficient!")
+            hammer_efficiency *= 1.15
+        } else {
+            info("Your research project failed...")
+        }
+    } else {
         info("Not enough kangaroos...")
     }
 }
@@ -182,10 +203,10 @@ function give_viagra() {
 function updateView() {
   document.getElementById("kangaroos_manufactured").innerHTML = manufactured
   document.getElementById("kangaroos_in_stock").innerHTML = in_stock
-  document.getElementById("builders").innerHTML = builders.toString()+" ("+(builders*0.5).toString()+" kangaroos per second)"
+  document.getElementById("builders").innerHTML = builders.toString()+" ("+Math.round(100*builders*hammer_efficiency*0.5)/100+" kangaroos per second)"
   document.getElementById("hirebuilder").innerHTML = "Hire a kangaroo builder! (cost: "+builder_cost().toString()+" kangaroos)"
   document.getElementById("buildassemblyline").innerHTML = "Build a kangaroo assembly line! (cost: "+assembly_line_cost().toString()+" kangaroos)"
-  document.getElementById("assemblylines").innerHTML = assembly_lines.toString()+" ("+(assembly_lines*50).toString()+" kangaroos per second)"
+  document.getElementById("assemblylines").innerHTML = assembly_lines.toString()+" ("+(assembly_lines*5).toString()+" kangaroos per second)"
   checkUnlockables()
 }
 
@@ -203,8 +224,7 @@ function hire_builder() {
         in_stock -= builder_cost()
         builders += 1
         updateView()
-    }
-    else {
+    } else {
         info("Not enough kangaroos...")
     }
 }
@@ -214,8 +234,7 @@ function build_assembly_line() {
         in_stock -= assembly_line_cost()
         assembly_lines += 1
         updateView()
-    }
-    else {
+    } else {
         info("Not enough kangaroos...")
     }
 }
