@@ -123,7 +123,8 @@
   <canvas id="gravitygame"></canvas>
 <script>
 var settings = {
-  gravityStrength: 0.00001,
+  gravityStrength: 0.0000014,
+  terminalVelocity: 0.004,
   playerSize: 0.02,
   particleSize: 0.007,
   particleLife: 500,
@@ -137,6 +138,7 @@ var level;
 var player, obstacles, particleSets;
 var amountOfParticles = 20;
 var mousePos = {x: 0.5, y: 0.5};
+var aspectRatio;
 
 function init() {
   document.getElementById("game-over").style.visibility = "hidden";
@@ -144,6 +146,7 @@ function init() {
   scores = [];
   ctx.canvas.width = window.innerWidth;
   ctx.canvas.height = window.innerHeight;
+  aspectRatio = ctx.canvas.width/ctx.canvas.height;
 
   gameOver = false;
   startLevel(1);
@@ -201,13 +204,17 @@ function addScore(n) {
 }
 
 function applyAirResistance(progress) {
-  var maxSpeed = 0.0035;
-  var slowDown = Math.abs(player.ySpeed) / maxSpeed * settings.gravityStrength;
-  player.ySpeed = player.ySpeed - Math.sign(player.ySpeed) * slowDown * progress/7;
+  var slowDown = function (speed) {
+    return settings.gravityStrength * (speed / settings.terminalVelocity)*progress;
+  }
+  var currentSpeed = Math.sqrt(player.xSpeed*player.xSpeed + player.ySpeed*player.ySpeed);
+  var relativeSlowDown = (currentSpeed - slowDown(currentSpeed)) / currentSpeed;
+  player.ySpeed -= slowDown(player.ySpeed);
+  player.xSpeed -= slowDown(player.xSpeed);
 }
 
 function applyGravity (thing, progress) {
-  thing.ySpeed += settings.gravityStrength * progress/7;
+  thing.ySpeed += settings.gravityStrength * progress;
 }
 
 function applyPlayerInput(progress) {
@@ -215,8 +222,8 @@ function applyPlayerInput(progress) {
 }
 
 function applySpeed (thing, progress, bounceback) {
-  thing.y += thing.ySpeed * progress/7;
-  thing.x += thing.xSpeed * progress/7;
+  thing.y += thing.ySpeed * progress / 7;
+  thing.x += thing.xSpeed * progress / (7 * aspectRatio);
   if (bounceback) {
     if (thing.x < 0) {
       thing.xSpeed = Math.abs(thing.xSpeed);
