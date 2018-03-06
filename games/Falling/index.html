@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Gravity game</title>
+  <title>Falling</title>
   <link rel="shortcut icon" type="image/x-icon" href="favico.ico">
   <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
   <style>
@@ -314,7 +314,7 @@ function spawnParticles(x, y, angle) {
 
 function startLevel(levelNumber) {
   level = levelNumber;
-  document.title = "Gravity game - level "+level;
+  document.title = "Falling - level "+level;
   scores.push(1000*level + 9000);
   player = {
     x: 0.5,
