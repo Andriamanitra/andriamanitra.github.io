@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test game</title>
+    <style>
+        body {
+            text-align: center;
+            background: #ff88ff;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test game</h1>
+    <p>
+        <label for="score-input">Score</label>
+        <input id="score-input" type="number" step="0.1" value="4.5">
+    </p>
+    <p><button id="score">Post score</button></p>
+    <p><button id="save">Save game</button></p>
+    <p><button id="load">Load game</button></p>
+    <p><button id="errors">Demonstrate errors</button></p>
+<script>
+    var msgs = {
+        setting: {
+            messageType: "SETTING",
+            options: {
+                "width": 640,
+                "height": 360
+            }
+        },
+        load: {
+            messageType: "LOAD_REQUEST",
+        }, // erroneous messages
+        errors: [
+            {
+                messageType: "LOAD",
+                gameState: {
+                    score: 420.0
+                }
+            },
+            {
+                messageType: "SAVEGAME"
+            },
+            {
+                messageType: "SCORE",
+                score: "420.0"
+            },
+            {
+                messageType: "SCORE"
+            },
+            "this is a message"
+        ]
+    };
+    var scoreInput = document.getElementById("score-input");
+
+    function receiveMessage(e) {
+        var msg = e.data;
+        if (msg.messageType === "LOAD") {
+            scoreInput.value = msg.gameState.score;
+        }
+    }
+
+    window.addEventListener("message", receiveMessage, false);
+    
+    window.parent.postMessage(msgs.setting, "*");
+
+    document.getElementById("score").addEventListener("click", function (e) {
+        var msg = {
+            messageType: "SCORE",
+            score: Number(scoreInput.value)
+        };
+        window.parent.postMessage(msg, "*");
+    });
+    
+    document.getElementById("save").addEventListener("click", function () {
+        var msg = {
+            messageType: "SAVE",
+            gameState: {
+                score: Number(scoreInput.value)
+            }
+        };
+        window.parent.postMessage(msg, "*");
+    });
+    
+    document.getElementById("load").addEventListener("click", function () {
+        window.parent.postMessage(msgs.load, "*");
+    });
+    
+    document.getElementById("errors").addEventListener("click", function () {
+        for (err of msgs.errors) {
+            window.parent.postMessage(err, "*");
+        }
+    });
+</script>
+</body>
+</html>
