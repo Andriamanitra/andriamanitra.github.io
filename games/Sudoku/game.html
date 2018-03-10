@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <script src="sudoku.js" defer></script>
+    <title>Sudoku Shooter</title>
+</head>
+<body>
+    <div class="wrapper">
+        <div id="game-container">
+            <table id="sudoku-table">
+                <tbody id="sudoku"></tbody>
+            </table>
+        </div>
+        <div id="score-container">
+            Score
+            <div id="score">1337</div>
+        </div>
+        <div id="buttons">
+            <button id="new-game">New game</button>
+            <button id="save-game">Save game</button>
+            <button id="load-game">Load game</button>
+        </div>
+        <div id="info"></div>
+        <div id="next-numbers-container">Next up:
+            <div id="next-numbers">
+            </div>
+            <div id="timer"></div>
+        </div>
+    </div>
+    <audio id="puff" src="puff.ogg" preload="auto"></audio>
+    <audio id="dudududu" src="dudududu.ogg" preload="auto"></audio>
+    <audio id="outoftime" src="outoftime.ogg" preload="auto"></audio>
+</body>
+</html>

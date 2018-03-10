@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudoku Shooter</title>
+    <style>
+        iframe {
+            display: block;
+            margin: 0 auto;
+        }
+        li {
+            font-family: "Consolas";
+        }
+        li:nth-child(odd) {
+            background-color: #eeeeee;
+        }
+        li:nth-child(even) {
+            background-color: #dddddd;
+        }
+        .warning {
+            color: #ee2222
+        }
+    </style>
+</head>
+<body>
+    <iframe id="game" width=800 height=600 src="game.html"></iframe>
+
+    <div id="output"></div>
+    <script>
+        var iframe = document.getElementById("game");
+        var output = document.getElementById("output");
+        var validMessageTypes = [
+            "SCORE",
+            "SAVE",
+            "LOAD_REQUEST",
+            "SETTING"
+        ];
+        var messageTypesFromService = ["LOAD", "ERROR"];
+
+        var savedGame;
+
+        function println(txt, isWarning) {
+            var textEl = document.createElement("li");
+            if (isWarning) textEl.classList += "warning";
+            textEl.innerText = txt;
+            output.appendChild(textEl);
+        }
+
+        function receiveMessage(e) {
+            var msg = e.data
+            println("Received message: "+JSON.stringify(msg));
+
+            if (messageTypesFromService.includes(msg.messageType)) {
+                println("> Warning: messages of type "+msg.messageType+
+                    " should only be sent from service to game", true);
+                return;
+            }
+
+            if (!validMessageTypes.includes(msg.messageType)) {
+                println("> Invalid message type: "+msg.messageType, true);
+                return;
+            }
+
+            if (msg.messageType === "SETTING") {
+                iframe.width = msg.options.width;
+                iframe.height = msg.options.height;
+                println("> iframe dimensions set to "+iframe.width+"x"+iframe.height);
+                return;
+            }
+
+            if (msg.messageType === "SCORE") {
+                if (!msg.score) {
+                    println("> Warning: Message of type \"SCORE\" has no field named score", true);
+                    return;
+                }
+                if (typeof msg.score !== "number") {
+                    println("> Warning: type of score is not a number", true);
+                }
+                return;
+            }
+
+            if (msg.messageType === "SAVE") {
+                if (!msg.gameState) {
+                    println("> Warning: Message of type \"SAVE\" has no field named gameState", true);
+                    return;
+                }
+                savedGame = msg.gameState;
+                println("> Saved game state: "+JSON.stringify(savedGame));
+                return;
+            }
+
+            if (msg.messageType === "LOAD_REQUEST") {
+                if (savedGame) {
+                    var response = {
+                        messageType: "LOAD",
+                        gameState: savedGame
+                    };
+                    iframe.contentWindow.postMessage(response, "*");
+                    println("> Responded with: "+JSON.stringify(response));
+                } else {
+                    var response = {
+                        messageType: "ERROR",
+                        info: "No saved game!"
+                    };
+                    iframe.contentWindow.postMessage(response, "*");
+                    println("> No saved games; responded with "+JSON.stringify(response));
+                }
+                return;
+            }
+        }
+
+        window.addEventListener("message", receiveMessage, false);
+
+        document.getElementById("update-button").addEventListener("click", function() {
+            output.innerHTML = "";
+            var srcValue = document.getElementById("url-input").value;
+            iframe.width = 800;
+            iframe.height = 600;
+            iframe.src = srcValue;
+            savedGame = undefined;
+            println("Loaded iframe from src=\""+srcValue+"\"");
+        })
+    </script>
+</body>
+</html>
