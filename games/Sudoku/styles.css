@@ -54,7 +54,6 @@
 #game-container {
     grid-column: 1;
     grid-row: 1 / 4;
-    outline: 1px solid gray;
 }
 
 #score-container {
@@ -70,14 +69,15 @@
 }
 
 #buttons {
+    display: flex;
     grid-column: 2;
     grid-row: 2;
     text-align: center;
 }
 
 #buttons button {
-    height: 90%;
-    width: 1fr;
+    float: left;
+    flex: 1;
 }
 
 #info {
