@@ -111,16 +111,6 @@
         }
 
         window.addEventListener("message", receiveMessage, false);
-
-        document.getElementById("update-button").addEventListener("click", function() {
-            output.innerHTML = "";
-            var srcValue = document.getElementById("url-input").value;
-            iframe.width = 800;
-            iframe.height = 600;
-            iframe.src = srcValue;
-            savedGame = undefined;
-            println("Loaded iframe from src=\""+srcValue+"\"");
-        })
     </script>
 </body>
 </html>
