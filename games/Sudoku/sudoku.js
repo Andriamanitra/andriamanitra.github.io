@@ -207,6 +207,7 @@ function emptyCellClicked(e) {
 }
 
 function puzzleCompleted() {
+    playSound("levelcomplete");
     showInfo("Level complete!");
     setScore(score + settings.scoreForComplete);
     settings.visibleNumberProb = (settings.visibleNumberProb+0.2)/2;
