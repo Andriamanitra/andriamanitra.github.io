@@ -64,8 +64,12 @@ function Sudoku(sudokuEl) {
         for (var x = 0; x < 9; x++) {
             for (var y = 0; y < 9; y++) {
                 if (Math.random() < p) {
-                    fillCell(self.puzzle[x][y], x, y);
-                    self.remaining[self.puzzle[x][y]] -= 1;
+                    // this makes sure that the center square is always
+                    // empty if probability of showing numbers is over 80%
+                    if (p < 0.8 || x !== 4 || y !== 4) {
+                        fillCell(self.puzzle[x][y], x, y);
+                        self.remaining[self.puzzle[x][y]] -= 1;
+                    }
                 }
             }
         }
