@@ -1,3 +1,10 @@
+@import url(http://allfont.net/allfont.css?fonts=open-sans-semibold);
+@import url(http://allfont.net/allfont.css?fonts=lucida-sans-unicode);
+
+body {
+    font-family: arial;
+}
+
 #sudoku-table {
     table-layout: fixed;
     border-collapse: collapse;
@@ -14,6 +21,7 @@
     border: 1px solid black;
     text-align: center;
     font-size: 6vh;
+    font-family: "Open Sans Semibold", arial;
 
     user-select: none;
     -moz-user-select: none;
@@ -56,6 +64,36 @@
     grid-row: 1 / 4;
 }
 
+#lives {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 21vh;
+    overflow: hidden;
+    font-size: 8vh;
+    font-family: "Lucida Sans Unicode";
+}
+
+#lives::after {
+    content: "♥";
+}
+
+.wrongs0::after {
+    opacity: 1;
+}
+
+.wrongs1::after {
+    opacity: 0.7;
+}
+
+.wrongs2::after {
+    opacity: 0.45;
+}
+
+.wrongs3::after {
+    opacity: 0.2;
+}
+
 #score-container {
     grid-column: 2;
     grid-row: 1;
@@ -76,6 +114,7 @@
 }
 
 #buttons button {
+    font-family: "Open Sans Semibold";
     float: left;
     flex: 1;
 }
@@ -99,18 +138,20 @@
 
 #next-numbers div {
     display: inline-block;
-    width: 12vh;
-    height: 12vh;
-    font-size: 10vh;
-    border: 1px solid black;
+    width: 11vh;
+    height: 11vh;
+    font-size: 8vh;
+    font-family: "Open Sans Semibold", arial;
+    border: 1vh solid black;
     border-radius: 12vh;
     margin-top: 5vh;
-    margin-right: 4px;
+    margin-right: 2vh;
 }
 
 #next-numbers div:nth-child(1) {
     margin-right: 8px;
-    border: 2px solid black;
+    border: 1.2vh solid black;
+    margin-right: 3vh;
     transform: scale(1.2);
 }
 

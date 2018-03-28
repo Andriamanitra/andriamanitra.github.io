@@ -1,10 +1,14 @@
 var nextNumbersEl = document.getElementById("next-numbers");
 var scoreEl = document.getElementById("score");
+var livesEl = document.getElementById("lives");
 var score;
 var sudoku;
 var next;
 var timerTimeout;
 var PUZZLE_COMPLETE = 0;
+var MAX_WRONGS = 4;
+var wrongs = 0;
+var lives = 3;
 
 var settings = {
     width: 640,
@@ -114,6 +118,7 @@ function newGame() {
     settings.visibleNumberProb = 0.95;
     newPuzzle();
     setScore(0);
+    setLives(3, 0);
 }
 
 function newPuzzle() {
@@ -141,7 +146,9 @@ function saveGame() {
         messageType: "SAVE",
         gameState: {
             score: score,
-            visibleNumberProb: settings.visibleNumberProb
+            visibleNumberProb: settings.visibleNumberProb,
+            lives: lives,
+            wrongs: wrongs
         }
     };
     showInfo("Game saved!");
@@ -152,6 +159,7 @@ function loadGame(gameState) {
     settings.visibleNumberProb = gameState.visibleNumberProb;
     setScore(gameState.score);
     newPuzzle();
+    setLives(gameState.lives, gameState.wrongs);
     showInfo("Game loaded!");
 }
 
@@ -186,10 +194,15 @@ function emptyCellClicked(e) {
     if (sudoku.guess(n, e.target.x, e.target.y)) {
         playSound("dudududu");
         setScore(score + settings.scoreForCorrect);
+        setLives(lives, 0);
     } else {
-        playSound("puff");
         highlightIllegal(n, e.target.x, e.target.y, sudoku.puzzle);
         setScore(score + settings.scoreForIncorrect);
+        if (setLives(lives, wrongs+1) <= 0) {
+            gameOver();
+            return;
+        }
+        playSound("puff");
         sudoku.addRemaining(n);
         e.target.innerHTML = next[0];
     }
@@ -210,9 +223,8 @@ function puzzleCompleted() {
     playSound("levelcomplete");
     showInfo("Level complete!");
     setScore(score + settings.scoreForComplete);
-    settings.visibleNumberProb = (settings.visibleNumberProb+0.2)/2;
+    settings.visibleNumberProb = (settings.visibleNumberProb+0.3)/2;
     newPuzzle();
-    //setTimeout(playSound, 200, "dudududu");
 }
 
 function updateNext() {
@@ -233,7 +245,6 @@ function restartTimer() {
     timer.classList.add("timer");
     clearTimeout(timerTimeout);
     timerTimeout = setTimeout(function() {
-        playSound("outoftime");
         setScore(score+settings.scoreForOutOfTime);
         sudoku.addRemaining(next.shift());
         var n = sudoku.getRemaining();
@@ -242,6 +253,11 @@ function restartTimer() {
         }
         updateMouseoverPreview();
         updateNext();
+        if (setLives(lives-1, 0) <= 0) {
+            gameOver();
+        } else {
+            playSound("outoftime");
+        }
     }, settings.timeToShoot);
 }
 
@@ -258,6 +274,33 @@ function updateMouseoverPreview() {
 function setScore(n) {
     score = n;
     scoreEl.innerHTML = score;
+}
+
+function setLives(newLives, newWrongs) {
+    if (newWrongs >= MAX_WRONGS) {
+        lives = newLives - 1;
+        wrongs = 0;
+    } else {
+        lives = newLives;
+        wrongs = newWrongs;
+    }
+    if (lives > 0) {
+        var livesText = "♥".repeat(lives-1);
+        livesEl.innerHTML = livesText;
+        livesEl.className = "wrongs"+wrongs;
+    }
+    return lives;
+}
+
+function gameOver() {
+    playSound("wumwumwum");
+    var msg = {
+        messageType: "SCORE",
+        score: score
+    };
+    window.parent.postMessage(msg, "*");
+    showInfo("Game over! Score: "+score);
+    newGame();
 }
 
 function randomInt(from, to) {
