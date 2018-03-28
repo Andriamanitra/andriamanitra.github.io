@@ -1,5 +1,5 @@
-@import url(http://allfont.net/allfont.css?fonts=open-sans-semibold);
-@import url(http://allfont.net/allfont.css?fonts=lucida-sans-unicode);
+@import url(https://allfont.net/allfont.css?fonts=open-sans-semibold);
+@import url(https://allfont.net/allfont.css?fonts=lucida-sans-unicode);
 
 body {
     font-family: arial;
@@ -114,7 +114,7 @@ body {
 }
 
 #buttons button {
-    font-family: "Open Sans Semibold";
+    font-family: "Open Sans Semibold", arial;
     float: left;
     flex: 1;
 }
