@@ -79,7 +79,7 @@
             }
 
             if (msg.messageType === "SCORE") {
-                if (!msg.score) {
+                if (typeof(msg.score) === "undefined") {
                     println("> Warning: Message of type \"SCORE\" has no field named score", true);
                     return;
                 }
