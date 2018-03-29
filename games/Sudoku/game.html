@@ -1,5 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- SUDOKU SHOOTER
+======= Technical description =========================================
+The game is done entirely in HTML/CSS/JavaScript, without using any
+game development frameworks or external libraries such as jQuery.
+All of the game logic is found in the sudoku.js file. The game also
+uses some CSS for animations and stuff, these can be found in styles.css.
+Some CSS animations/modifications are triggered from the JavaScript code
+by changing classes of elements.
+Sounds are implemented as HTML5 audio elements that are then played from
+the gamelogic when needed by using the function called playSound().
+I tried to put all of the sudoku specific logic inside the function called
+Sudoku in order to make it somewhat reusable (I don't think I managed to
+do it that well in the end though - for example the Sudoku.draw() adds
+eventListeners that are specifically for this game to the cell elements of
+the puzzle). Functions that are defined outside the main Sudoku function
+are more general or specific to this particular game.
+
+======= How to play ===================================================
+Game starts automatically as the page is loaded. The goal of the game
+is to solve sudokus. The game gives you numbers and you need to shoot
+them into place using the mouse. You get 3 lives for each puzzle and
+the game ends when you run out of lives. You have 5 seconds to find a
+place for each number. You lose a life if the timer runs out or you
+miss 4 times in a row. Running out of time and wrong guesses also
+cause you to lose points. Puzzles get progressively harder as you
+complete them. The later puzzles will require some guessing. Saving
+the game only saves the current score, difficulty and remaining lives,
+the puzzles themselves are not saved.
+-->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">

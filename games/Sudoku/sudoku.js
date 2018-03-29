@@ -3,33 +3,39 @@ var scoreEl = document.getElementById("score");
 var livesEl = document.getElementById("lives");
 var score;
 var sudoku;
-var next;
-var timerTimeout;
-var PUZZLE_COMPLETE = 0;
+var next; // array of upcoming numbers
+var timerTimeout; // setTimeout() for time to shoot
+var PUZZLE_COMPLETE = 0; // just a constant that we use to indicate the game is over
+
+// How many wrongs before losing a life - don't modify this constant
+// or you'll need to update CSS too!
 var MAX_WRONGS = 4;
-var wrongs = 0;
-var lives = 3;
+var wrongs = 0; // How many wrongs the player currently has in a row
+var lives = 3; // How many lives the player has left
 
 var settings = {
     width: 640,
     height: 360,
-    nexts: 4,
-    timeToShoot: 5000,
-    visibleNumberProb: 0.95,
+    nexts: 4, // How many upcoming numbers to show to player?
+    timeToShoot: 5000, // in milliseconds
+    visibleNumberProb: 0.95, // probability of a puzzle cell's number being visible
     scoreForCorrect: 100,
     scoreForIncorrect: -20,
     scoreForComplete: 200,
     scoreForOutOfTime: -50
 }
 
-sendSettingMsg();
-newGame();
+sendSettingMsg(); // sets the iframe dimensions using SETTING message
+newGame(); // Starts the game as soon as the page is loaded!
 
 function Sudoku(sudokuEl) {
     var self = this;
-    self.puzzle = [];
+    self.puzzle = []; // array of puzzle rows
     self.el = sudokuEl;
     self.numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+    // How many of each number is still left to place?
+    // for example {1: 9, 2: 7, 3: 9, ...}
     self.remaining = {};
 
     self.init = function (newPuzzle) {
@@ -48,9 +54,11 @@ function Sudoku(sudokuEl) {
                 cell.className = "empty-cell";
                 cell.x = x;
                 cell.y = y;
+                // Show preview of number on mouseover
                 cell.onmouseover = function (e) {
                     e.target.innerHTML = next[0];
                 }
+                // Listen to clicks
                 cell.onclick = emptyCellClicked;
                 row.appendChild(cell);
             }
@@ -85,6 +93,9 @@ function Sudoku(sudokuEl) {
     };
 
     self.fillCell = function(n, x, y) {
+        // This function puts number n inside the cell on
+        // coordinates (x,y) and removes eventListeners
+        // that are only needed for empty cells
         var cell = self.cellAt(x, y);
         cell.innerHTML = n;
         cell.classList.remove("empty-cell");
@@ -101,8 +112,11 @@ function Sudoku(sudokuEl) {
     };
 
     self.getRemaining = function () {
-        // ok this is really stupid way to do this but there's no multiset in
-        // JavaScript and I'm too lazy to think of a better way
+        // This function returns either PUZZLE_COMPLETE if there are no more numbers
+        // that need to be placed or a number from the remaining
+        // ..ok I know this is a really stupid way to do this but there's no multiset
+        // in JavaScript and I'm too lazy to think of a better way so I just use strings
+        // as an intermediate step to get a random number
         var remainingAsString = "";
         for (var i = 1; i < 10; i++) {
             remainingAsString += String(i).repeat(self.remaining[i]);
@@ -160,6 +174,7 @@ function saveGame() {
 }
 
 function loadGame(gameState) {
+    // restores saved game from gameState
     settings.visibleNumberProb = gameState.visibleNumberProb;
     setScore(gameState.score);
     newPuzzle();
@@ -168,6 +183,7 @@ function loadGame(gameState) {
 }
 
 function requestLoadGame() {
+    // requests a loaded game from server
     var msg = {
         messageType: "LOAD_REQUEST",
     }
@@ -186,14 +202,20 @@ function sendSettingMsg () {
 }
 
 function showInfo(txt) {
+    // This function displays a fading text below the buttons
+    // used for stuff like "Game over" or "Game saved"
     var infoDiv = document.getElementById("info");
     infoDiv.innerHTML = txt;
+
+    // this little trick seems to be the easiest way to reset css animation
     infoDiv.classList.remove("fade-text");
     void infoDiv.offsetWidth;
     infoDiv.classList.add("fade-text");
 }
 
 function emptyCellClicked(e) {
+    // handles the clicks - check if a guess is correct,
+    // play sounds, give points accordingly
     var n = next.shift();
     if (sudoku.guess(n, e.target.x, e.target.y)) {
         playSound("dudududu");
@@ -233,6 +255,7 @@ function puzzleCompleted() {
 }
 
 function updateNext() {
+    // updates the GUI for upcoming numbers
     nextNumbersEl.innerHTML = "";
     for (var n of next) {
         var nextEl = document.createElement("div");
@@ -243,13 +266,16 @@ function updateNext() {
 }
 
 function restartTimer() {
+    // Reset the CSS animation
     var timer = document.getElementById("timer");
     timer.style.animationDuration = (settings.timeToShoot/1000)+"s";
     timer.classList.remove("timer");
     void timer.offsetWidth;
     timer.classList.add("timer");
+    // Restart timerTimeout
     clearTimeout(timerTimeout);
     timerTimeout = setTimeout(function() {
+        // This function is what happens when you run out of time to shoot
         setScore(score+settings.scoreForOutOfTime);
         sudoku.addRemaining(next.shift());
         var n = sudoku.getRemaining();
@@ -267,6 +293,9 @@ function restartTimer() {
 }
 
 function updateMouseoverPreview() {
+    // Updates the preview in the cell mouse is currently hovering over; only
+    // needed when player runs out of time while hovering over a cell (preview
+    // normally refreshes when mouse is moved into the cell).
     var hoveringOver = document.querySelectorAll(":hover");
     if (hoveringOver.length) {
         var currentCell = hoveringOver[hoveringOver.length-1];
@@ -277,11 +306,16 @@ function updateMouseoverPreview() {
 }
 
 function setScore(n) {
+    // This function should be used to change value of score
+    // because this updates the GUI as well
     score = n;
     scoreEl.innerHTML = score;
 }
 
 function setLives(newLives, newWrongs) {
+    // This function should be used to change value of lives
+    // and/or wrongs, because this checks if you're running out
+    // of lives and updates the GUI too
     if (newWrongs >= MAX_WRONGS) {
         lives = newLives - 1;
         wrongs = 0;
@@ -290,8 +324,13 @@ function setLives(newLives, newWrongs) {
         wrongs = newWrongs;
     }
     if (lives > 0) {
+        // repeat lives-1 times because there's ::after selector 
+        // in the CSS that adds the last heart.
         var livesText = "♥".repeat(lives-1);
         livesEl.innerHTML = livesText;
+        // this class changes the opacity of the last heart that is added
+        // with aforementioned ::after selector so it can act as an 
+        // indicator of how many wrong guesses you have left
         livesEl.className = "wrongs"+wrongs;
     }
     return lives;
@@ -309,10 +348,13 @@ function gameOver() {
 }
 
 function randomInt(from, to) {
+    // just returns random integer from closed range
     return Math.floor(from + Math.random() * (to - from + 1));
 }
 
 function shuffled(a) {
+    // this function returns a new array containing given array's
+    // elements in a random order
     var b = a.slice();
     for (var i = 0; i < b.length; i++) {
         var r = randomInt(i, b.length-1);
@@ -324,6 +366,8 @@ function shuffled(a) {
 }
 
 function shiftLeft (a, n) {
+    // shifts array n times to the left, adding
+    // the shifted elements to the end
     for (var i = 0; i < n; i++) {
         a.push(a.shift());
     }
@@ -342,6 +386,9 @@ function rotatePuzzle(puzzle) {
 }
 
 function highlightIllegal(n, x, y, puzzle) {
+    // After a wrong guess this function checks which cells
+    // prevent a number from being placed and highlights them
+    // using some css trickery
     var illegals = [];
     // check rows and columns
     for (var i = 0; i < 9; i++) {
@@ -374,11 +421,14 @@ function highlightIllegal(n, x, y, puzzle) {
 }
 
 function createSudoku() {
+    // Generates an array of arrays representing a valid solution
+    // to 9x9 sudoku.
     // Note: This does not generate truly random puzzles
     // because it's hard, but for now this is good
     // enough. A better way would be to use pre-generated
     // seed puzzles. Here I'm basically using only one seed
-    // puzzle, but each seed puzzle has 5 806 080 variations.
+    // puzzle, but each seed puzzle has 5 806 080 variations
+    // (although I don't think I'm using all of the variations here).
     puzzle = [];
     // generating seed puzzle
     var nums = shuffled(numbers);
@@ -407,6 +457,9 @@ function createSudoku() {
 }
 
 function playSound(elId) {
+    // plays a sound or starts the playback from the beginning if
+    // the sound was already playing. Parameter needs to be id of
+    // a HTML5 audio element found in the html document.
     var audio = document.getElementById(elId);
     if (audio.paused) {
         audio.play();
@@ -415,10 +468,12 @@ function playSound(elId) {
     }
 }
 
+// connect buttons to their respective functions
 document.getElementById("new-game").addEventListener("click", newGame);
 document.getElementById("save-game").addEventListener("click", saveGame);
 document.getElementById("load-game").addEventListener("click", requestLoadGame);
 
+// listen for messages from the page that contains the iframe
 window.addEventListener("message", function (e) {
     var msg = e.data;
     if (msg.messageType === "LOAD") {
