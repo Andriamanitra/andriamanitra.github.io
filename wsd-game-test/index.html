@@ -122,14 +122,22 @@
         window.addEventListener("message", receiveMessage, false);
 
         document.getElementById("update-button").addEventListener("click", function() {
+            loadFromUrl(document.getElementById("url-input").value);
+        });
+
+        function loadFromUrl(srcUrl) {
             output.innerHTML = "";
-            var srcValue = document.getElementById("url-input").value;
             iframe.width = 800;
             iframe.height = 600;
-            iframe.src = srcValue;
+            iframe.src = srcUrl;
             savedGame = undefined;
-            println("Loaded iframe from src=\""+srcValue+"\"");
-        })
+            println("Loaded iframe from src=\""+srcUrl+"\"");
+        };
+
+        var params = new URLSearchParams(document.location.search.substring(1));
+        if (params.get("url")) {
+            loadFromUrl(params.get("url"));
+        }
     </script>
 </body>
 </html>
