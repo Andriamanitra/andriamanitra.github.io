@@ -51,7 +51,7 @@ body {
 #car {
     position: absolute;
     left: 80vw; top: 44vw; height: 200vw;
-    animation: 4s driveby cubic-bezier(0.075, 0.82, 0.165, 1) infinite;
+    animation: 4s driveby cubic-bezier(0, 1, 0, 1) infinite;
 }
 
 @keyframes driveby {
