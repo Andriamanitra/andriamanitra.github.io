@@ -23,7 +23,7 @@ function updateTimer(n) {
 
 function getTime() {
     var currentdate = new Date();
-    return currentdate.getHours()+":"+currentdate.getMinutes();
+    return currentdate.getHours()+":"+ ("0"+currentdate.getMinutes()).slice(-2);
 }
 
 function randomNick() {
