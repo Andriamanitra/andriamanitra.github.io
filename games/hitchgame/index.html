@@ -2,34 +2,30 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>The Game of Hitch</title>
-    <link rel="shortcut icon" type="image/x-icon" href="favico.ico">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" media="screen" href="main.css" />
-    <script src="chance.js"></script>
-    <script src="main.js" defer></script>
-</head>
+    <style>
+        body {
+            margin: 0; padding: 0;
+            text-align: center;
+            overflow: hidden;
+        }
+    </style>
 <body>
-    <div class="hitch">
-    <img src="body.png">
-    <img src="head.png">
-    <img id="thumb" src="thumb.png">
-        <div id="sign">
-            <img src="sign.png">
-            <div id="signContainer">
-                <p id="signText" contenteditable>A55</p>
-            </div>
-        </div>
-    </div>
-    <img id="car" src="car.png">
-    <div id="timer"></div>
-    <button id="hitchButton">Let's hitch!</button>
-    <div id="chatContainer">
-        Stream Chat
-        <div id="chat">
-        </div>
-    </div>
-    <div id="about">Inspired by <a href="https://www.twitch.tv/hitch">Hitch on Twitch</a></div>
+    <iframe id="game" src="game.html"></iframe>
+    <script>
+    window.onload = function(e) {
+        var game = document.getElementById("game");
+        console.log(window.innerWidth, window.innerHeight);
+        if ( window.innerWidth < (3/2) * window.innerHeight ) {
+            // game size limited by width
+            game.width = window.innerWidth-20;
+            game.height = (2/3)*game.width;
+        } else {
+            // game size limited by height
+            game.height = window.innerHeight-10;
+            game.width = 1.5*game.height;
+        }
+    };
+    </script>
 </body>
 </html>
