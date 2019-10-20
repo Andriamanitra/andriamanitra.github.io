@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        iframe {
+            display: block;
+            margin: 0 auto;
+        }
+        #app {
+            display: block;
+            margin: 0 auto;
+            width: 75ch;
+        }
+        label {
+            display: block;
+        }
+        #inputs > div {
+            float: left;
+            padding-right: 8px;
+            padding-bottom: 8px;
+        }
+        #inputs input[type=text] {
+            width: 16ch;
+        }
+        #inputs input[type=number] {
+            width: 8ch;
+        }
+        #share {
+            float: left;
+            clear: left;
+        }
+        #shareUrl {
+            width: 75ch !important;
+        }
+    </style>
+    <title>YouTube Looper</title>
+</head>
+<body>
+    <!-- Embedded YouTube will replace this div -->
+    <div id="player"></div>
+
+    <!-- Vue app -->
+    <div id="app">
+        <div id="inputs">
+            <div>
+                <label for="videoId">Video ID</label>
+                <input id="videoId" type="text" v-model.lazy="videoId" v-on:change="videoChange">
+            </div>
+            <div>
+                <label for="start">Start</label>
+                <input id="start" type="number" v-model.number="start" step=0.1>
+            </div>
+            <div>
+                <label for="end">End</label>
+                <input id="end" type="number" v-model.number="end" step=0.1>
+            </div>
+            <div id="share">
+                <label for="shareUrl">Share</label>
+                <input id="shareUrl" type="text" :value="getShareUrl()">
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <script src="https://youtube.com/iframe_api"></script>
+    <script>
+        var url = new URL(window.location.href);
+        var player;
+        //var start = Number(url.searchParams.get("start"));
+        //var end = Number(url.searchParams.get("end"));
+        //var videoId = url.searchParams.get("v");
+
+        var app = new Vue({
+            el: "#app",
+            data: {
+                start:  Number(url.searchParams.get("start")),
+                end: Number(url.searchParams.get("end")),
+                videoId: url.searchParams.get("v"),
+            },
+            methods: {
+                getShareUrl: function () {
+                    var base = window.location.href.split('?')[0];
+                    return base + "?v=" + this.videoId + "&start=" + this.start + "&end=" + this.end;
+                },
+                videoChange: function () {
+                    player.loadVideoById(this.videoId, this.start);
+                } 
+            }
+        })
+
+        function onYouTubeIframeAPIReady() {
+            player = new YT.Player("player", {
+                height: "390",
+                width:  "640",
+                videoId: app.videoId,
+                events: {
+                    "onReady": onPlayerReady
+                }
+            })
+        }
+        function onPlayerReady(e) {
+            e.target.seekTo(app.start);
+            e.target.playVideo();
+            setInterval(function() {
+                if (player.getCurrentTime() > app.end) {
+                    player.seekTo(app.start);
+                };
+            }, 25);
+        }
+    </script>
+</body>
+</html>
