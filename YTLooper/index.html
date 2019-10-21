@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        iframe {
+        #player {
             display: block;
-            margin: 0 auto;
+            margin: 5px auto;
         }
         #app {
             display: block;
@@ -17,7 +17,7 @@
         }
         #inputs > div {
             float: left;
-            padding-right: 8px;
+            padding-right: 12px;
             padding-bottom: 8px;
         }
         #inputs input[type=text] {
@@ -26,12 +26,18 @@
         #inputs input[type=number] {
             width: 8ch;
         }
+        #toggleVideo {
+            float: right;
+        }
         #share {
             float: left;
             clear: left;
         }
         #shareUrl {
             width: 75ch !important;
+        }
+        .hidden {
+            display: none !important;
         }
     </style>
     <title>YouTube Looper</title>
@@ -50,11 +56,14 @@
             <div>
                 <label for="start">Start</label>
                 <input id="start" type="number" v-model.number="start" step=0.1>
+                <button id="setStart">Set</button>
             </div>
             <div>
                 <label for="end">End</label>
                 <input id="end" type="number" v-model.number="end" step=0.1>
+                <button id="setEnd">Set</button>
             </div>
+            <button id="toggleVideo">Toggle video</button>
             <div id="share">
                 <label for="shareUrl">Share</label>
                 <input id="shareUrl" type="text" :value="getShareUrl()">
@@ -67,9 +76,6 @@
     <script>
         var url = new URL(window.location.href);
         var player;
-        //var start = Number(url.searchParams.get("start"));
-        //var end = Number(url.searchParams.get("end"));
-        //var videoId = url.searchParams.get("v");
 
         var app = new Vue({
             el: "#app",
@@ -95,7 +101,13 @@
                 width:  "640",
                 videoId: app.videoId,
                 events: {
-                    "onReady": onPlayerReady
+                    "onReady": onPlayerReady,
+                    "onStateChange": function(e) {
+                        var status = e.data;
+                        if (status === YT.PlayerState.ENDED) {
+                            player.seekTo(app.start);
+                        }
+                    }
                 }
             })
         }
@@ -103,11 +115,21 @@
             e.target.seekTo(app.start);
             e.target.playVideo();
             setInterval(function() {
-                if (player.getCurrentTime() > app.end) {
+                if (app.end > app.start && player.getCurrentTime() > app.end) {
                     player.seekTo(app.start);
                 };
             }, 25);
         }
+
+        document.getElementById("setStart").addEventListener("click", function(e) {
+            app.start = Math.round(player.getCurrentTime()*100)/100;
+        })
+        document.getElementById("setEnd").addEventListener("click", function(e) {
+            app.end = Math.round(player.getCurrentTime()*100)/100;
+        })
+        document.getElementById("toggleVideo").addEventListener("click", function(e) {
+            document.getElementById("player").classList.toggle("hidden");
+        })
     </script>
 </body>
 </html>
