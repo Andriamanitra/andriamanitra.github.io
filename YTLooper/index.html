@@ -143,6 +143,7 @@
             },
             methods: {
                 videoChange: function () {
+                    console.log("asd");
                     var ytLink = this.videoId.match(ytregex);
                     if (ytLink) {
                         this.videoId = ytLink[1];
@@ -170,8 +171,12 @@
         }
 
         function onPlayerReady(e) {
-            e.target.seekTo(app.start);
-            e.target.playVideo();
+            if (app.videoId) {
+                e.target.seekTo(app.start);
+                e.target.playVideo();
+            } else {
+                document.getElementById("videoId").select();
+            }
             setInterval(function() {
                 if (app.end > app.start && player.getCurrentTime() > app.end) {
                     player.seekTo(app.start);
