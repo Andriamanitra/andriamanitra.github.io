@@ -89,11 +89,11 @@
             <input id="videoId" type="text" v-model.lazy="videoId" v-on:change="videoChange" title="Paste YouTube video link or ID" onclick="this.select()">
 
             <label id="startLabel" for="start">Start</label>
-            <input id="start" type="number" v-model.number="start" step=0.1>
+            <input id="start" type="number" v-model.number="start" step=0.1 min=0>
             <button id="setStart" title="Set loop start to current position in video">Set</button>
 
             <label id="endLabel" for="end">End</label>
-            <input id="end" type="number" v-model.number="end" step=0.1>
+            <input id="end" type="number" v-model.number="end" step=0.1 min=0>
             <button id="setEnd" title="Set loop end to current position in video">Set</button>
 
             <button id="restart" title="Go back to beginning of the loop">
