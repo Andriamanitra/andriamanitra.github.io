@@ -1,114 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        #player {
-            display: block;
-            margin: 5px auto;
-        }
         #app {
             display: block;
             margin: 0 auto;
-            width: 620px;
+            max-width: 640px;
         }
-        #inputs {
-            display: grid;
-            grid-template-areas:    "videoL startL startL endL endL .   .     buttB buttP buttTV"
-                                    "videoI startI startB endI endB .   buttR .     .     .     ";
-            grid-template-columns:   1fr    1fr    1fr    1fr  1fr  5px 2fr   1fr   1fr 3fr;
-            grid-column-gap: 5px;
-            grid-template-rows: 24px 20px;
-            grid-row-gap: 5px;
-            padding-bottom: 15px;
+
+        #player {
+            width: 100%;
         }
-        #videoIdLabel {
-            grid-area: videoL;
+
+        #video-controls,
+        #time-select,
+        #share {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1em;
         }
-        #videoId {
-            width: 14ch;
-            grid-area: videoI;
+
+        button {
+            height: 3em;
+            min-width: 6em;
         }
-        #startLabel {
-            grid-area: startL;
+
+        button:hover {
+            cursor: pointer;
         }
-        #start {
-            grid-area: startI;
+
+        #time-select input {
+            max-width: 12ch;
         }
-        #setStart {
-            width: 5ch;
-            grid-area: startB;
+
+        #share-input {
+            margin-left: 2ch;
+            width: 95%;
         }
-        #endLabel {
-            grid-area: endL;
+
+        @media all and (orientation: portrait) {
+            #app {
+                max-width: 100vw !important;
+                max-width: 100vw;
+            }
+
+            #player {
+                height: 60vw;
+            }
         }
-        #end {
-            grid-area: endI;
-        }
-        #setEnd {
-            width: 5ch;
-            grid-area: endB;
-        }
-        #restart {
-            grid-area: buttB;
-            padding: 0;
-        }
-        #pause {
-            grid-area: buttP;
-            padding: 0;
-        }
-        #reset {
-            grid-area: buttR;
-        }
-        #toggleVideo {
-            grid-area: buttTV;
-        }
-        input[type=number] {
-            width: 8ch;
-        }
-        #videoIdLabel, #startLabel, #endLabel {
-            padding-top: 10px;
-        }
-        #shareUrl {
-            width: 620px;
-        }
-        .hidden {
-            display: none !important;
+
+        @media all and (max-device-width: 600px) {
+
+            #video-controls,
+            #time-select,
+            #share {
+                flex-direction: column;
+            }
         }
     </style>
     <title>YouTube Looper</title>
 </head>
+
 <body>
-    <!-- Embedded YouTube will replace this div -->
-    <div id="player"></div>
 
     <!-- Vue app -->
     <div id="app">
-        <div id="inputs">
-            <label id="videoIdLabel" for="videoId">Video ID</label>
-            <input id="videoId" type="text" v-model.lazy="videoId" v-on:change="videoChange" title="Paste YouTube video link or ID" onclick="this.select()">
-
-            <label id="startLabel" for="start">Start</label>
-            <input id="start" type="number" v-model.number="start" step=0.1 min=0>
-            <button id="setStart" title="Set loop start to current position in video">Set</button>
-
-            <label id="endLabel" for="end">End</label>
-            <input id="end" type="number" v-model.number="end" step=0.1 min=0>
-            <button id="setEnd" title="Set loop end to current position in video">Set</button>
-
-            <button id="restart" title="Go back to beginning of the loop">
-                <img src="backarrow.svg" alt="Back arrow" height="20px" width="20px" />
-            </button>
-            <button id="pause" title="Pause/Play video">
-                <img src="playpause.svg" alt="Play/Pause" height="20px" width="20px" />
-            </button>
-            <button id="reset" title="Reset loop start and end to 0">Reset</button>
-
-            <button id="toggleVideo">Toggle video</button>
+        <!-- Embedded YouTube will replace this div -->
+        <div id="player"></div>
+        <div id="video-controls">
+            <div>
+                <label id="videoIdLabel" for="videoId">Video ID</label>
+                <input id="videoId" type="text" v-model.lazy="videoId" v-on:change="videoChange"
+                    title="Paste YouTube video link or ID" onclick="this.select()">
+            </div>
+            <div>
+                <button id="restart" title="Go back to beginning of the loop">Rewind</button>
+                <button id="pause" title="Pause/Play video">Play/Pause</button>
+                <button id="reset" title="Reset loop start and end to 0">Reset</button>
+            </div>
+        </div>
+        <div id="time-select">
+            <div>
+                <label for="start">Start</label>
+                <input id="start" type="number" v-model.number="start" step=0.1 min=0>
+                <button id="setStart" title="Set loop start to current position in video">Set</button>
+            </div>
+            <div>
+                <label for="end">End</label>
+                <input id="end" type="number" v-model.number="end" step=0.1 min=0>
+                <button id="setEnd" title="Set loop end to current position in video">Set</button>
+            </div>
         </div>
         <div id="share">
-            <label for="shareUrl">Share</label>
-            <input id="shareUrl" type="text" :value="shareUrl" onclick="this.select()">
+            <label for="share-input">Share</label>
+            <input id="share-input" type="text" :value="shareUrl" onclick="this.select()">
         </div>
     </div>
 
@@ -123,7 +113,7 @@
             el: "#app",
             data: {
                 baseUrl: window.location.href.match(/^[^\#\?]+/)[0].replace(/\/$/, ""),
-                start:  Number(url.searchParams.get("start")),
+                start: Number(url.searchParams.get("start")),
                 end: Number(url.searchParams.get("end")),
                 videoId: url.searchParams.get("v"),
             },
@@ -132,9 +122,9 @@
             },
             computed: {
                 urlParams: function () {
-                    var urlParamsString = "?v="+this.videoId;
-                    if (this.start > 0) { urlParamsString += "&start="+this.start }
-                    if (this.end > this.start) { urlParamsString += "&end="+this.end }
+                    var urlParamsString = "?v=" + this.videoId;
+                    if (this.start > 0) { urlParamsString += "&start=" + this.start }
+                    if (this.end > this.start) { urlParamsString += "&end=" + this.end }
                     return urlParamsString;
                 },
                 shareUrl: function () {
@@ -143,24 +133,23 @@
             },
             methods: {
                 videoChange: function () {
-                    console.log("asd");
                     var ytLink = this.videoId.match(ytregex);
                     if (ytLink) {
                         this.videoId = ytLink[1];
                     }
                     player.loadVideoById(this.videoId, this.start);
-                } 
+                }
             }
         })
 
         function onYouTubeIframeAPIReady() {
             player = new YT.Player("player", {
                 height: "390",
-                width:  "640",
+                width: "640",
                 videoId: app.videoId,
                 events: {
                     "onReady": onPlayerReady,
-                    "onStateChange": function(e) {
+                    "onStateChange": function (e) {
                         var status = e.data;
                         if (status === YT.PlayerState.ENDED) {
                             player.seekTo(app.start);
@@ -177,7 +166,7 @@
             } else {
                 document.getElementById("videoId").select();
             }
-            setInterval(function() {
+            setInterval(function () {
                 if (app.end > app.start && player.getCurrentTime() > app.end) {
                     player.seekTo(app.start);
                 };
@@ -187,7 +176,7 @@
         function updateAddressBar() {
             // Only works in HTML5
             history.pushState(
-                {start: app.start, end: app.end, videoId: app.videoId},
+                { start: app.start, end: app.end, videoId: app.videoId },
                 "YouTube Looper",
                 app.urlParams
             )
@@ -198,7 +187,7 @@
         function debounce(f, wait) {
             var timer;
             return function () {
-                var later = function() {
+                var later = function () {
                     f.apply(this);
                 }
                 clearTimeout(timer)
@@ -206,36 +195,33 @@
             }
         }
 
-        document.getElementById("setStart").addEventListener("click", function(e) {
-            app.start = Math.round(player.getCurrentTime()*100)/100;
+        document.getElementById("setStart").addEventListener("click", function (e) {
+            app.start = Math.round(player.getCurrentTime() * 100) / 100;
         });
-        document.getElementById("setEnd").addEventListener("click", function(e) {
-            app.end = Math.round(player.getCurrentTime()*100)/100;
+        document.getElementById("setEnd").addEventListener("click", function (e) {
+            app.end = Math.round(player.getCurrentTime() * 100) / 100;
         });
-        document.getElementById("restart").addEventListener("click", function(e) {
+        document.getElementById("restart").addEventListener("click", function (e) {
             player.seekTo(app.start);
         })
-        document.getElementById("reset").addEventListener("click", function(e) {
+        document.getElementById("reset").addEventListener("click", function (e) {
             app.start = 0;
             app.end = 0;
         });
-        document.getElementById("pause").addEventListener("click", function(e) {
+        document.getElementById("pause").addEventListener("click", function (e) {
             player.getPlayerState() === YT.PlayerState.PAUSED ? player.playVideo() : player.pauseVideo();
         });
-        document.getElementById("toggleVideo").addEventListener("click", function(e) {
-            document.getElementById("player").classList.toggle("hidden");
-        });
-        window.onpopstate = function(event) {
+        window.onpopstate = function (event) {
             // Handle the browser's "back" button
             if (event.state === null) { return }
             app.start = event.state.start;
-            app.end   = event.state.end;
+            app.end = event.state.end;
             if (app.videoId !== event.state.videoId) {
                 app.videoId = event.state.videoId;
                 player.loadVideoById(app.videoId, app.start);
             }
         };
-
     </script>
 </body>
+
 </html>
