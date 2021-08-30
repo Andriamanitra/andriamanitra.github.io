@@ -14,60 +14,63 @@ const tracks = `
 ║   ╔══╗     ║   
 ║   ║  ╚═════╝   
 ╚═══╝            
-`.split("\n")
+`.split("\n").slice(1)
 
 trackElement.innerText = tracks
 
-
-var minecart = {x: 0, y: 1}
-var direction = RIGHT
-
-setInterval(moveMinecart, 200)
+let cart = {x: 0, y: 0, direction: RIGHT}
+var interval;
+changeSpeed(5)
 
 function moveMinecart() {
-    let track = tracks[minecart.y][minecart.x]
-
-    if (direction == RIGHT) {
+    let track = tracks[cart.y][cart.x]
+    if (cart.direction == RIGHT) {
         if (track == "╗") {
-            direction = DOWN
+            cart.direction = DOWN
         } else if (track == "╝") {
-            direction = UP
+            cart.direction = UP
         }
-    } else if (direction == DOWN) {
+    } else if (cart.direction == DOWN) {
         if (track == "╝") {
-            direction = LEFT
+            cart.direction = LEFT
         } else if (track == "╚") {
-            direction = RIGHT
+            cart.direction = RIGHT
         }
-    } else if (direction == LEFT) {
+    } else if (cart.direction == LEFT) {
         if (track == "╔") {
-            direction = DOWN
+            cart.direction = DOWN
         } else if (track == "╚") {
-            direction = UP
+            cart.direction = UP
         }
-    } else if (direction == UP) {
+    } else if (cart.direction == UP) {
         if (track == "╔") {
-            direction = RIGHT
+            cart.direction = RIGHT
         } else if (track == "╗") {
-            direction = LEFT
+            cart.direction = LEFT
         }
     }
 
-    if (direction == RIGHT) {
-        minecart.x += 1
-    } else if (direction == DOWN) {
-        minecart.y += 1
-    } else if (direction == LEFT) {
-        minecart.x -= 1
-    } else if (direction == UP) {
-        minecart.y -= 1
+    if (cart.direction == RIGHT) {
+        cart.x += 1
+    } else if (cart.direction == DOWN) {
+        cart.y += 1
+    } else if (cart.direction == LEFT) {
+        cart.x -= 1
+    } else if (cart.direction == UP) {
+        cart.y -= 1
     }
 
     renderTrack()
 }
 
+function changeSpeed(fps) {
+    let delay = 1000 / fps
+    clearInterval(interval)
+    interval = setInterval(moveMinecart, delay)
+}
+
 function renderTrack() {
     let renderedTracks = tracks.map(line => line.split(""))
-    renderedTracks[minecart.y][minecart.x] = CART
+    renderedTracks[cart.y][cart.x] = CART
     trackElement.innerText = renderedTracks.map(line => line.join("")).join("\n")
 }
