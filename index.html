@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html, body {
+      margin: 0; padding: 0;
+      overflow: hidden;
+    }
+  </style>
+  <title>Shader fun</title>
+</head>
+<body>
+  <canvas id="glCanvas" width="800" height="600">
+    Unable to load canvas – is JavaScript disabled?
+  </canvas>
+  <script id="vertexShader" type="x-shader/x-vertex">
+    attribute vec3 a_pos;
+
+    void main(void) {
+      gl_Position = vec4(a_pos, 1.0);
+    }
+  </script>
+  <script id="fragmentShader" type="x-shader/x-fragment">
+    #ifdef GL_ES
+    precision mediump float;
+    #endif
+
+    uniform vec2 u_mouse;
+    uniform float u_time;
+    uniform sampler2D tex0;
+
+    void main() {
+      float m_x = u_mouse.x - 420.0;
+      float m_y = u_mouse.y - 69.0;
+      float tex_x = gl_FragCoord.x;
+      float tex_y = gl_FragCoord.y + 420.0;
+      float x = mod(tex_x / m_x * 2.0, 2.0);
+      float y = mod(tex_y / (u_mouse.y - 0.05), 1.0);
+      if (x > 1.0) x = 2.0 - x;
+      gl_FragColor = texture2D(tex0, vec2(x - 0.007 * u_time, -y - 0.6 * u_time));
+    }
+  </script>
+  <script>
+    const canvasEl = document.querySelector("#glCanvas")
+    const vertexShaderEl = document.querySelector("#vertexShader")
+    const shaderEl = document.querySelector("#fragmentShader")
+
+    function setup() {
+      canvasEl.setAttribute("width", window.innerWidth)
+      canvasEl.setAttribute("height", window.innerHeight)
+      const gl = canvasEl.getContext("webgl")
+      if (gl === null) {
+        console.error("Unable to initialize WebGL!")
+        return
+      }
+      canvasEl.mousePos = { x: 0, y: 0 }
+      canvasEl.addEventListener("mousemove", (event) => {
+        let rect = event.target.getBoundingClientRect()
+        canvasEl.mousePos = {
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top
+        }
+      })
+      const vertexShader = gl.createShader(gl.VERTEX_SHADER)
+      gl.shaderSource(vertexShader, vertexShaderEl.textContent)
+      gl.compileShader(vertexShader)
+      if (!gl.getShaderParameter(vertexShader, gl.COMPILE_STATUS)) {
+        console.error(
+          "Error compiling the vertex shader",
+          gl.getShaderInfoLog(vertexShader)
+          )
+        gl.deleteShader(vertexShader)
+        return
+      }
+
+      const fragmentShader = gl.createShader(gl.FRAGMENT_SHADER)
+      gl.shaderSource(fragmentShader, shaderEl.textContent)
+      gl.compileShader(fragmentShader)
+      if (!gl.getShaderParameter(fragmentShader, gl.COMPILE_STATUS)) {
+        console.error(
+          "Error compiling the fragment shader",
+          gl.getShaderInfoLog(fragmentShader)
+          )
+        gl.deleteShader(fragmentShader)
+        return
+      }
+
+      const shaderProgram = gl.createProgram()
+      gl.attachShader(shaderProgram, vertexShader)
+      gl.attachShader(shaderProgram, fragmentShader)
+      gl.linkProgram(shaderProgram)
+      if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+        console.error(
+          "Error linking the shader",
+          gl.getProgramInfoLog(shaderProgram)
+          )
+        return
+      }
+      const programInfo = {
+        program: shaderProgram,
+        attribLocations: {
+          vertexPosition: gl.getAttribLocation(shaderProgram, 'a_pos'),
+        },
+        uniformLocations: {
+          time: gl.getUniformLocation(shaderProgram, "u_time"),
+          mouse: gl.getUniformLocation(shaderProgram, "u_mouse")
+        }
+      }
+      const buffers = loadBuffers(gl)
+      let texture = loadTexture(gl, "texture.png")
+      function render(now) {
+        drawScene(gl, programInfo, buffers, texture, now * 0.001, canvasEl)
+        requestAnimationFrame(render)
+      }
+      requestAnimationFrame(render)
+    }
+
+    function loadBuffers(gl) {
+      const positionBuffer = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer)
+
+      const positions = [
+        -1.0, -1.0,
+        -1.0,  1.0,
+        1.0, -1.0,
+        1.0,  1.0,
+        ]
+
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW)
+
+      var texcoordBuffer = gl.createBuffer()
+      gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer)
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        1.0,  1.0,
+        1.0,  0.0,
+        0.0,  1.0,
+        0.0,  0.0,
+        ]), gl.STATIC_DRAW)
+
+      return { position: positionBuffer, texcoord: texcoordBuffer }
+    }
+
+    function loadTexture(gl, url) {
+      const texture = gl.createTexture()
+      gl.bindTexture(gl.TEXTURE_2D, texture)
+
+      // use a single pixel as texture while waiting for image to load
+      const level = 0
+      const colorFormat = gl.RGBA
+      const srcFormat = gl.RGBA
+      const srcType = gl.UNSIGNED_BYTE
+      const pixel = new Uint8Array([0, 0, 255, 255])
+      gl.texImage2D(gl.TEXTURE_2D, level, colorFormat, 1, 1, 0, srcFormat, srcType, pixel)
+
+      const image = new Image()
+      image.onload = function() {
+        gl.bindTexture(gl.TEXTURE_2D, texture)
+        gl.texImage2D(gl.TEXTURE_2D, level, colorFormat, srcFormat, srcType, image)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+      }
+      image.src = url
+
+      return texture
+    }
+
+    function drawScene(gl, programInfo, buffers, texture, now, canvas) {
+      gl.bindBuffer(gl.ARRAY_BUFFER, buffers.position)
+      gl.vertexAttribPointer(programInfo.attribLocations.vertexPosition, 2, gl.FLOAT, false, 0, 0)
+      gl.enableVertexAttribArray(programInfo.attribLocations.vertexPosition)
+
+      gl.useProgram(programInfo.program)
+      gl.uniform1f(programInfo.uniformLocations.time, now)
+      gl.uniform2f(programInfo.uniformLocations.mouse, canvas.mousePos.x, canvas.mousePos.y)
+
+      gl.activeTexture(gl.TEXTURE0)
+      gl.bindTexture(gl.TEXTURE_2D, texture)
+      gl.uniform1i(programInfo.uniformLocations.uSampler, 0)
+
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+    }
+
+    window.onload = setup
+  </script>
+</body>
+</html>
